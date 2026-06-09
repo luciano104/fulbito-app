@@ -92,13 +92,6 @@ flutter run -d chrome
 
 # Correr en emulador Android
 flutter run -d android
-```
-
-> **Nota:** si corrés en emulador Android, cambiá la `_baseUrl` en
-> `lib/core/services/api_client.dart` de `http://127.0.0.1:8000`
-> a `http://10.0.2.2:8000`.
-
----
 
 ## Arquitectura
 

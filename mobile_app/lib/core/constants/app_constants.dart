@@ -1,0 +1,14 @@
+/// Roles de usuario definidos en el backend Django.
+/// El login devuelve uno de estos strings en el campo 'role'.
+class AppRoles {
+  static const String player = 'jugador';
+  static const String owner = 'dueno';
+}
+
+/// Nombres de rutas para la navegación.
+/// Usar siempre estas constantes en lugar de strings sueltos.
+class AppRoutes {
+  static const String roleSelector = '/';
+  static const String playerHome = '/jugador/home';
+  static const String ownerHome = '/dueno/home';
+}
