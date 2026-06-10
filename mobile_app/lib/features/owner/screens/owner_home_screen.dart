@@ -1,190 +1,77 @@
 import 'package:flutter/material.dart';
-import '/core/constants/app_constants.dart';
 
-/// Pantalla de inicio del flujo Dueño de Complejo.
-/// RESPONSABLE: Enzo
-///
-/// Esta pantalla es el punto de entrada del flujo del dueño.
-/// Reemplazar el contenido con las pantallas reales.
-class DuenoHomeScreen extends StatelessWidget {
-  const DuenoHomeScreen({super.key});
+class OwnerHomeScreen extends StatefulWidget {
+  const OwnerHomeScreen({super.key});
+
+  @override
+  State<OwnerHomeScreen> createState() => _OwnerHomeScreenState();
+}
+
+class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
+  // Variable para saber qué pestaña está seleccionada (0, 1 o 2)
+  int _currentIndex = 0;
+
+  // Lista de las 3 pantallas que corresponden a cada pestaña
+  // Por ahora ponemos contenedores simples con texto para probar la navegación
+  final List<Widget> _paginas = [
+    const Center(child: Text('Pestaña 1: Mi Complejo y Reputación', style: TextStyle(fontSize: 18))),
+    const Center(child: Text('Pestaña 2: Gestión de Reservas y Feedback', style: TextStyle(fontSize: 18))),
+    const Center(child: Text('Pestaña 3: Grilla Horaria Global', style: TextStyle(fontSize: 18))),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 32),
-
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Flujo Dueño de Complejo',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.45),
-                          fontSize: 13,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Hola, Enzo 👋',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF448AFF).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF448AFF).withOpacity(0.3),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.storefront_outlined,
-                      color: Color(0xFF448AFF),
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-
-
-              const SizedBox(height: 32),
-
-              // Pantallas pendientes
-              const Text(
-                'Pantallas a desarrollar',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              _PendingItem(
-                label: 'Mi Complejo — Dashboard y reputación',
-                tab: 'Pestaña 1',
-                accentColor: const Color(0xFF448AFF),
-              ),
-              _PendingItem(
-                label: 'Gestión de reservas y reseñas',
-                tab: 'Pestaña 2',
-                accentColor: const Color(0xFF448AFF),
-              ),
-              _PendingItem(
-                label: 'Grilla horaria global',
-                tab: 'Pestaña 3',
-                accentColor: const Color(0xFF448AFF),
-              ),
-
-              const Spacer(),
-
-              // Botón volver
-              GestureDetector(
-                onTap: () => Navigator.pushReplacementNamed(
-                    context, AppRoutes.roleSelector),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A2C3D),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Cambiar de perfil',
-                      style: TextStyle(
-                        color: Colors.white60,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
+      // El AppBar puede cambiar su título dinámicamente según la pestaña activa
+      appBar: AppBar(
+        title: Text(_obtenerTituloBarra(_currentIndex)),
+        backgroundColor: Colors.green,
+        automaticallyImplyLeading: false, // Oculta el botón de volver (ya que es un Home)
       ),
-    );
-  }
-}
+      
+      // Muestra la pantalla correspondiente al índice actual
+      body: _paginas[_currentIndex],
 
-class _PendingItem extends StatelessWidget {
-  final String label;
-  final String tab;
-  final Color accentColor;
-
-  const _PendingItem({
-    required this.label,
-    required this.tab,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A2C3D),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              tab,
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+      // La barra de navegación inferior
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Cambia la pestaña activa al hacer tap
+          });
+        },
+        selectedItemColor: Colors.green, // Color del ícono seleccionado
+        unselectedItemColor: Colors.grey, // Color de los íconos no seleccionados
+        type: BottomNavigationBarType.fixed, // Mantiene los nombres fijos siempre
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Mi Complejo',
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.75),
-                fontSize: 14,
-              ),
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_soccer),
+            label: 'Reservas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month),
+            label: 'Grilla Horaria',
           ),
         ],
       ),
     );
+  }
+
+  // Función auxiliar para cambiar el título de la AppCommerce según la pestaña
+  String _obtenerTituloBarra(int index) {
+    switch (index) {
+      case 0:
+        return 'Panel de Control';
+      case 1:
+        return 'Gestión de Solicitudes';
+      case 2:
+        return 'Matriz Horaria';
+      default:
+        return 'Complejo App';
+    }
   }
 }

@@ -32,7 +32,7 @@ class CanchasSaltaApp extends StatelessWidget {
       routes: {
         AppRoutes.roleSelector: (_) => const RoleSelectorScreen(),
         AppRoutes.playerHome:  (_) => const JugadorHomeScreen(),
-        AppRoutes.ownerHome:    (_) => const DuenoHomeScreen(),
+        AppRoutes.ownerHome:    (_) => const OwnerHomeScreen(),
       },
     );
   }
