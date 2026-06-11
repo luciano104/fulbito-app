@@ -47,3 +47,6 @@ app.*.map.json
 # Archivos locales de Enzo (Linux Mint)
 linux/
 .metadata
+
+#Container de Docker
+/.devcontainer/
