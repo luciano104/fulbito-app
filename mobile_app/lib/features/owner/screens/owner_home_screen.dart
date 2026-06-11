@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'owner_dashboard_tab.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -14,7 +15,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   // Lista de las 3 pantallas que corresponden a cada pestaña
   // Por ahora ponemos contenedores simples con texto para probar la navegación
   final List<Widget> _paginas = [
-    const Center(child: Text('Pestaña 1: Mi Complejo y Reputación', style: TextStyle(fontSize: 18))),
+    const OwnerDashboardTab(),
     const Center(child: Text('Pestaña 2: Gestión de Reservas y Feedback', style: TextStyle(fontSize: 18))),
     const Center(child: Text('Pestaña 3: Grilla Horaria Global', style: TextStyle(fontSize: 18))),
   ];
