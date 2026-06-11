@@ -15,13 +15,18 @@ class CanchasSaltaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Fulbito App',
+
       debugShowCheckedModeBanner: false,
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF00C853),
+
           brightness: Brightness.dark,
         ),
+
         useMaterial3: true,
+
         fontFamily: 'SF Pro Display', // fallback a la fuente del sistema
       ),
 
@@ -31,8 +36,10 @@ class CanchasSaltaApp extends StatelessWidget {
       // Tabla de rutas — agregar acá cada nueva pantalla
       routes: {
         AppRoutes.roleSelector: (_) => const RoleSelectorScreen(),
-        AppRoutes.playerHome:  (_) => const JugadorHomeScreen(),
-        AppRoutes.ownerHome:    (_) => const DuenoHomeScreen(),
+
+        AppRoutes.playerHome: (_) => const JugadorHomeScreen(),
+
+        AppRoutes.ownerHome: (_) => const DuenoHomeScreen(),
       },
     );
   }
