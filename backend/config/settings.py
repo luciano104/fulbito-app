@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fulbito_db',
+        'NAME': 'fulbito_bd',
         'USER': 'postgres',
         'PASSWORD': '321654',
         'HOST': 'localhost',
