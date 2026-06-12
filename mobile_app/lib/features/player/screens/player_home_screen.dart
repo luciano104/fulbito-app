@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'inicio_tab.dart';
 // import '../../core/constants/app_constants.dart'; // Descomentá y ajustá los '..' según la profundidad de tu carpeta
 
 class JugadorHomeScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
 
   // Lista de pantallas "vacías" con los carteles de próximamente
   final List<Widget> _screens = [
+    const InicioTab(),
     const Center(
       child: Text('Inicio\n(Próximamente)', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
     ),
@@ -38,8 +40,18 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
       appBar: AppBar(
         title: const Text('Modo Jugador', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         // Usamos el color directamente acá para asegurarnos de que quede con el azul oscuro que querían
-        backgroundColor: const Color(0xFF1A237E), 
+        backgroundColor: Colors.green, 
         centerTitle: true,
+        actions: [
+          IconButton(
+            iconSize: 32,
+            icon: const Icon(Icons.account_circle, color: Colors.white),
+            tooltip: 'Ver Perfil', 
+            onPressed: () {
+            },
+          ),
+          const SizedBox(width: 15), 
+        ],
       ),
       // Muestra el cartel que corresponda
       body: _screens[_selectedIndex],
