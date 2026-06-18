@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-y%pr)_s*e)n^1ou%wbi4gwm5qf4p1q^^wb_(c-1a^a9$)w3tl(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+GLOBAL_IP = '10.160.52.121'
+GLOBAL_HOST = '8000'
+ALLOWED_HOSTS = [GLOBAL_IP, '27.0.0.1']
 
 
 # Application definition
@@ -37,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'users',
+    'facilities',
 ]
 
 MIDDLEWARE = [
@@ -74,8 +79,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fulbito_bd',
+        'USER': 'postgres',
+        'PASSWORD': '321654',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
