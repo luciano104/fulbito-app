@@ -27,7 +27,7 @@ DEBUG = True
 
 GLOBAL_IP = '10.160.52.121'
 GLOBAL_HOST = '8000'
-ALLOWED_HOSTS = [GLOBAL_IP]
+ALLOWED_HOSTS = [GLOBAL_IP, '27.0.0.1']
 
 
 # Application definition
@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'users',
+    'facilities',
 ]
 
 MIDDLEWARE = [
