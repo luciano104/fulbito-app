@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/auth/screens/owner_grid_tab.dart';
 import 'owner_dashboard_tab.dart';
+import 'owner_bookings_tab.dart';
+
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -16,8 +19,8 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   // Por ahora ponemos contenedores simples con texto para probar la navegación
   final List<Widget> _paginas = [
     const OwnerDashboardTab(),
-    const Center(child: Text('Pestaña 2: Gestión de Reservas y Feedback', style: TextStyle(fontSize: 18))),
-    const Center(child: Text('Pestaña 3: Grilla Horaria Global', style: TextStyle(fontSize: 18))),
+    const OwnerBookingsTab(),
+    const OwnerGridTab(),
   ];
 
   @override
