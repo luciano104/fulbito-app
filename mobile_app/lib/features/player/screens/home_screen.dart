@@ -80,96 +80,143 @@ class _InicioTabState extends State<InicioTab> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: canchas.length,
-      itemBuilder: (context, index) {
-        final cancha = canchas[index];
-        
-        return Card(
-          elevation: 4,
-          margin: const EdgeInsets.only(bottom: 20.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  // 3. Acá reemplazamos el fondo verde por la imagen de internet
-                  Image.network(
-                    cancha.imagenUrl,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover, // Esto recorta la imagen para que llene el rectángulo sin deformarse
-                    // Un pequeño extra profesional: mientras carga la imagen, mostramos un circulito
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child; // Si ya cargó, muestra la foto
-                      return Container(
-                        height: 180,
-                        width: double.infinity,
-                        color: Colors.grey[800],
-                        child: const Center(
-                          child: CircularProgressIndicator(color: Colors.greenAccent),
-                        ),
-                      );
-                    },
-                  ),
-                  // Botón de Favorito
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton(
-                      icon: Icon(
-                        cancha.esFavorita ? Icons.favorite : Icons.favorite_border,
-                        color: cancha.esFavorita ? Colors.red : Colors.white, // Cambié el gris por blanco para que resalte sobre las fotos
-                        size: 32,
-                      ),
-                      onPressed: () => _toggleFavorito(index),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cancha.nombre,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            cancha.ubicacion,
-                            style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      cancha.precio,
-                      style: const TextStyle(
-                        color: Colors.greenAccent, 
-                        fontWeight: FontWeight.bold, 
-                        fontSize: 16
-                      ),
-                    ),
-                  ],
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // --- ENCABEZADO: Ícono a la izquierda, título verde al centro ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Botón de Perfil ahora a la izquierda
+                IconButton(
+                  iconSize: 32,
+                  icon: const Icon(Icons.person, color: Colors.green),
+                  tooltip: 'Perfil',
+                  onPressed: () {
+                    // TODO: Botón inactivo por ahora
+                    print('Clic en Perfil');
+                  },
                 ),
+                
+                // Título centrado y verde
+                const Text(
+                  'Hola Jugador',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green, // Cambiado a verde
+                  ),
+                ),
+                
+                // Caja invisible de 48px a la derecha para empujar el texto al centro exacto
+                const SizedBox(width: 48), 
+              ],
+            ),
+            const SizedBox(height: 16), 
+            
+            // --- GRILLA DE CANCHAS EN MODO OSCURO ---
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.zero, 
+                itemCount: canchas.length,
+                itemBuilder: (context, index) {
+                  final cancha = canchas[index];
+                  
+                  return Card(
+                    elevation: 4,
+                    margin: const EdgeInsets.only(bottom: 20.0),
+                    color: Colors.grey[900], // Fondo de tarjeta bien oscuro
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Stack(
+                          children: [
+                            Image.network(
+                              cancha.imagenUrl,
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover, 
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child; 
+                                return Container(
+                                  height: 180,
+                                  width: double.infinity,
+                                  color: Colors.grey[850], // Tono más oscuro de carga
+                                  child: const Center(
+                                    child: CircularProgressIndicator(color: Colors.greenAccent),
+                                  ),
+                                );
+                              },
+                            ),
+                            // Botón de Favorito
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: IconButton(
+                                icon: Icon(
+                                  cancha.esFavorita ? Icons.favorite : Icons.favorite_border,
+                                  color: cancha.esFavorita ? Colors.red : Colors.white, 
+                                  size: 32,
+                                ),
+                                onPressed: () => _toggleFavorito(index),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      cancha.nombre,
+                                      // Letras blancas para contrastar con el modo oscuro
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold, 
+                                        fontSize: 18, 
+                                        color: Colors.white
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      cancha.ubicacion,
+                                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                cancha.precio,
+                                style: const TextStyle(
+                                  color: Colors.greenAccent, 
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 16
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
