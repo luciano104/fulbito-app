@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_constants.dart';
 import 'features/auth/screens/role_selector_screen.dart';
-import 'features/player/screens/player_home_screen.dart';
+import 'features/player/screens/navigation_bar.dart';
 import 'features/owner/screens/owner_home_screen.dart';
 
 void main() {

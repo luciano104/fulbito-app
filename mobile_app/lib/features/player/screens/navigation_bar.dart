@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'inicio_tab.dart';
-// import '../../core/constants/app_constants.dart'; // Descomentá y ajustá los '..' según la profundidad de tu carpeta
+import 'booking_screen.dart';
+import 'home_screen.dart';
 
 class JugadorHomeScreen extends StatefulWidget {
   const JugadorHomeScreen({super.key});
@@ -16,12 +16,8 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
   // Lista de pantallas "vacías" con los carteles de próximamente
   final List<Widget> _screens = [
     const InicioTab(),
-    const Center(
-      child: Text('Inicio\n(Próximamente)', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
-    ),
-    const Center(
-      child: Text('Reservas\n(Próximamente)', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
-    ),
+    const BookingsScreen(),
+    
     const Center(
       child: Text('Cerca / Mapa\n(Próximamente)', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
     ),
@@ -37,23 +33,7 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Modo Jugador', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        // Usamos el color directamente acá para asegurarnos de que quede con el azul oscuro que querían
-        backgroundColor: Colors.green, 
-        centerTitle: true,
-        actions: [
-          IconButton(
-            iconSize: 32,
-            icon: const Icon(Icons.account_circle, color: Colors.white),
-            tooltip: 'Ver Perfil', 
-            onPressed: () {
-            },
-          ),
-          const SizedBox(width: 15), 
-        ],
-      ),
-      // Muestra el cartel que corresponda
+     
       body: _screens[_selectedIndex],
       
       bottomNavigationBar: BottomNavigationBar(
