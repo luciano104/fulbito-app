@@ -29,7 +29,9 @@ def build_user_response(user):
     return {
         'id': user.id,
         'name': user.name,
+        'lastname': user.lastname,
         'email': user.email,
+        'phone': user.phone,
         'image': user.image,
         'role': user.role,
         'notification_token': user.notification_token,

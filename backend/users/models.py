@@ -6,10 +6,11 @@ class User(models.Model):
 
 	ROLE_CHOICES = [
 		(PLAYER_ROLE, 'Player'),
-		(OWNER_ROLE, 'Building Owner')
+		(OWNER_ROLE, 'Facility Owner')
 	]
 	id = models.AutoField(primary_key = True)
 	name = models.CharField(max_length = 100)
+	lastname = models.CharField(max_length = 100)
 	email = models.EmailField(unique = True)
 	image=models.CharField(
 		max_length = 255,
@@ -17,6 +18,7 @@ class User(models.Model):
 		blank = True
 	)
 	password = models.CharField(max_length=255)
+	phone = models.CharField(max_length=20, null=True, blank=True)
 	notification_token = models.CharField(
 		max_length = 255,
 		null = True,
