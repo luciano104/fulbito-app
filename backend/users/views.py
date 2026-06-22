@@ -20,8 +20,9 @@ def generar_token(user):
     # Eliminamos user_id genérico y ponemos nuestros campos
     del refresh.payload['user_id']
     refresh.payload['id'] = user.id
-    refresh.payload['nombre'] = user.nombre
-    refresh.payload['rol'] = user.rol
+    refresh.payload['name'] = user.name
+    refresh.payload['lastname'] = user.lastname
+    refresh.payload['role'] = user.role
     return refresh
 
 def build_user_response(user):

@@ -38,4 +38,4 @@ class User(models.Model):
 		db_table ='users'
 	
 	def __str__(self):
-		return f'{self.name} ({self.role})'
+		return f'{self.name} {self.lastname} ({self.role})'
