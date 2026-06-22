@@ -152,7 +152,7 @@ def list_schedules(request, court_id):
     # Si se pasa una fecha, marcamos cuáles ya están reservados
     if date:
         reserved = Reservation.objects.filter(
-            court__schedule=court,
+            schedule__court=court,
             date=date,
             status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
         ).values_list('schedule_id', flat=True)
@@ -232,7 +232,7 @@ def change_status_reservation(request, reservation_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    reservation.estado = new_status
+    reservation.status = new_status
     reservation.save()
 
     return Response(ReservationSerializer(reservation).data, status=status.HTTP_200_OK)
@@ -250,8 +250,8 @@ def create_review(request):
         review = serializer.save()
 
         # Recalcular el promedio del complejo
-        facility = review.reserva.horario.cancha.complejo
-        reviews = review.objects.filter(
+        facility = review.reservation.schedule.court.facility
+        reviews = Review.objects.filter(
             review__schedule__court__facility=facility
         )
         total = review.count()
@@ -295,6 +295,6 @@ def toggle_favorite(request, facility_id):
 def my_favorites(request):
     """El jugador ve sus complejos favoritos."""
     favorites = Favorite.objects.filter(player=request.user)
-    facilities = [f.facilities for f in favorites]
+    facilities = [f.facility for f in favorites]
     serializer = FacilityListSerializer(facilities, many=True)
     return Response({'favorites': serializer.data}, status=status.HTTP_200_OK)

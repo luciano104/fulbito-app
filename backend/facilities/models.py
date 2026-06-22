@@ -191,7 +191,7 @@ class Reservation(models.Model):
 class Review(models.Model):
 
     # OneToOneField: una reserva solo puede tener una reseña
-    review = models.OneToOneField(
+    reservation = models.OneToOneField(
         Reservation,
         on_delete=models.CASCADE,
         related_name='review'

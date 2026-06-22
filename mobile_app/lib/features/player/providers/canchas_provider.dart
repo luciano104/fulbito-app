@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '/features/player/screens/home_screen.dart'; // Ajustá el import a tu ruta real
+import 'package:mobile_app/core/constants/app_constants.dart';
 
 class CanchasProvider extends ChangeNotifier {
   List<CanchaFeed> canchas = [];
   bool isLoading = true;
 
   Future<void> obtenerCanchas() async {
-    final url = Uri.parse('http://192.168.100.9:8000/api/facilities/');
+    final url = Uri.parse('${ApiConstants.baseUrl}/facilities/');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

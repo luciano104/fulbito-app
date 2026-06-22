@@ -1,27 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/owner/providers/owner_dashboard_provider.dart';
+import 'package:provider/provider.dart';
+
+
+// ─────────────────────────────────────────────
+//  MODELOS
+// ─────────────────────────────────────────────
+class CourtStatus {
+  final int id;
+  final String teamSize;
+  final String surface;
+  final double price;
+  bool available;
+ 
+  CourtStatus({
+    required this.id,
+    required this.teamSize,
+    required this.surface,
+    required this.price,
+    required this.available,
+  });
+ 
+  factory CourtStatus.fromJson(Map<String, dynamic> json) => CourtStatus(
+        id: json['id'],
+        teamSize: json['team_size'],
+        surface: json['surface'],
+        price: double.parse(json['price'].toString()),
+        available: json['available'],
+      );
+}
+ 
+class DashboardStats {
+  final int turnosHoy;
+  final double porcentajeOcupacion;
+  final double ingresosEstimados;
+  final double avgRating;
+  final int totalReviews;
+ 
+  DashboardStats({
+    required this.turnosHoy,
+    required this.porcentajeOcupacion,
+    required this.ingresosEstimados,
+    required this.avgRating,
+    required this.totalReviews,
+  });
+}
+
+// ─────────────────────────────────────────────
+//  PANTALLA
+// ─────────────────────────────────────────────
 
 class OwnerDashboardTab extends StatefulWidget {
-  const OwnerDashboardTab({super.key});
+  final String token;
+  final int facilityId;
+
+  const OwnerDashboardTab({
+    super.key,
+    required this.token,
+    required this.facilityId,
+    });
 
   @override
   State<OwnerDashboardTab> createState() => _OwnerDashboardTabState();
 }
 
 class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
-  // Datos simulados (Mocks) que más adelante nos dará el Django de Luciano
-  final int _turnosReservados = 8;
-  final double _porcentajeOcupacion = 66.6;
-  final double _ingresosEstimados = 32000.0;
-  final double _calificacionPromedio = 4.8;
-  final int _totalResenas = 42;
-
-  // Estado de las canchas (Verdadero = Disponible, Falso = Mantenimiento)
-  bool _cancha1Activa = true;
-  bool _cancha2Activa = true;
-  bool _cancha3Activa = false; // Supongamos que está en mantenimiento
+  @override
+  void initState(){
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<OwnerDashboardProvider>(context, listen: false)
+            .cargarDashboard(widget.token, widget.facilityId));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<OwnerDashboardProvider>(context);
+
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.green));
+    }
+ 
+    if (provider.errorMessage != null) {
+      return Center(child: Text(provider.errorMessage!, style: const TextStyle(color: Colors.red)));
+    }
+ 
+    final stats = provider.stats;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -38,16 +103,16 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
           
           Row(
             children: [
-              _buildStatCard('Turnos hoy', '$_turnosReservados', Icons.event_available, Colors.blue),
+              _buildStatCard('Turnos hoy', '${stats?.turnosHoy ?? 0}', Icons.event_available, Colors.blue),
               const SizedBox(width: 12),
-              _buildStatCard('Ocupación', '${_porcentajeOcupacion.toStringAsFixed(1)}%', Icons.pie_chart, Colors.orange),
+              _buildStatCard('Ocupación', '${stats?.porcentajeOcupacion.toStringAsFixed(1) ?? '0'}%', Icons.pie_chart, Colors.orange),
             ],
           ),
           const SizedBox(height: 12),
           
           Row(
             children: [
-              _buildStatCard('Ingresos Est.', '\$${_ingresosEstimados.toStringAsFixed(0)}', Icons.monetization_on, Colors.green),
+              _buildStatCard('Ingresos Est.', '\$${stats?.ingresosEstimados.toStringAsFixed(0) ?? '0'}', Icons.monetization_on, Colors.green),
               const SizedBox(width: 12),
               // Tarjeta de Reputación
               Expanded(
@@ -65,11 +130,11 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
                           children: [
                             const Icon(Icons.star, color: Colors.amber, size: 20),
                             const SizedBox(width: 4),
-                            Text('$_calificacionPromedio', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text('${stats?.avgRating ?? 0}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text('($_totalResenas opiniones)', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text('(${stats?.totalReviews ?? 0} opiniones)', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                       ],
                     ),
                   ),
@@ -96,15 +161,16 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
           ),
           const SizedBox(height: 12),
 
-          _buildCanchaSwitchTile('Cancha 1 - Fútbol 5 (Pasto)', _cancha1Activa, (valor) {
-            setState(() => _cancha1Activa = valor);
-          }),
-          _buildCanchaSwitchTile('Cancha 2 - Fútbol 5 (Pasto)', _cancha2Activa, (valor) {
-            setState(() => _cancha2Activa = valor);
-          }),
-          _buildCanchaSwitchTile('Cancha 3 - Fútbol 5 (Techada)', _cancha3Activa, (valor) {
-            setState(() => _cancha3Activa = valor);
-          }),
+          ...provider.courts.map((court) => Card(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            child: SwitchListTile(
+              title: Text('${court.teamSize} - ${court.surface}', style: const TextStyle(fontWeight: FontWeight.w500),),
+              subtitle: Text(court.available ? 'Disponible para turnos': 'Pausada por Mantenimiento', style: TextStyle(color: court.available ? Colors.green : Colors.red, fontSize: 13),),
+              value: court.available,
+              activeColor: Colors.green,
+              onChanged: (_) => provider.toggleDisponibilidad(widget.token, court.id),
+              ),
+          )),
         ],
       ),
     );
@@ -128,23 +194,6 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // --- WIDGET AUXILIAR: Diseña la fila de cada cancha con su Switch ---
-  Widget _buildCanchaSwitchTile(String nombreCancha, bool estaActiva, ValueChanged<bool> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: SwitchListTile(
-        title: Text(nombreCancha, style: const TextStyle(fontWeight: FontWeight.w500)),
-        subtitle: Text(
-          estaActiva ? 'Disponible para turnos' : 'Pausada por Mantenimiento',
-          style: TextStyle(color: estaActiva ? Colors.green : Colors.red, fontSize: 13),
-        ),
-        value: estaActiva,
-        activeColor: Colors.green,
-        onChanged: onChanged,
       ),
     );
   }
