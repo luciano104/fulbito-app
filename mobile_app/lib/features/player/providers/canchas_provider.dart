@@ -8,7 +8,7 @@ class CanchasProvider extends ChangeNotifier {
   bool isLoading = true;
 
   Future<void> obtenerCanchas() async {
-    final url = Uri.parse('http://127.0.0.1:8000/list_facilities/');
+    final url = Uri.parse('http://192.168.100.9:8000/api/facilities/');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

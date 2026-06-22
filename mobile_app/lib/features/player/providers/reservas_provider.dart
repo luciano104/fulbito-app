@@ -8,7 +8,7 @@ class ReservasProvider extends ChangeNotifier {
   bool isLoading = true;
 
   Future<void> obtenerReservas() async {
-    final url = Uri.parse('http://127.0.0.1:8000/my_reservations/');
+    final url = Uri.parse('http://192.168.100.9:8000/api/reservations/my_reservations/');
     try {
       final response = await http.get(
         url,

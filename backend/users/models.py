@@ -6,10 +6,11 @@ class User(models.Model):
 
 	ROLE_CHOICES = [
 		(PLAYER_ROLE, 'Player'),
-		(OWNER_ROLE, 'Building Owner')
+		(OWNER_ROLE, 'Facility Owner')
 	]
 	id = models.AutoField(primary_key = True)
 	name = models.CharField(max_length = 100)
+	lastname = models.CharField(max_length = 100)
 	email = models.EmailField(unique = True)
 	image=models.CharField(
 		max_length = 255,
@@ -17,6 +18,7 @@ class User(models.Model):
 		blank = True
 	)
 	password = models.CharField(max_length=255)
+	phone = models.CharField(max_length=20, null=True, blank=True)
 	notification_token = models.CharField(
 		max_length = 255,
 		null = True,
@@ -36,4 +38,10 @@ class User(models.Model):
 		db_table ='users'
 	
 	def __str__(self):
-		return f'{self.name} ({self.role})'
+		return f'{self.name} {self.lastname} ({self.role})'
+	@property
+	def is_authenticated(self):
+		return True
+	@property
+	def is_anonymous(self):
+		return False

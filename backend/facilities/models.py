@@ -50,7 +50,7 @@ class Facility(models.Model):
         db_table = 'facilities'
 
     def __str__(self):
-        return self.nombre
+        return self.name
 
 
 # ─────────────────────────────────────────────
