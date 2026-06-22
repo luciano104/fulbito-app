@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'booking_screen.dart';
 import 'home_screen.dart';
+import 'canchas_map_screen.dart';
 
 class JugadorHomeScreen extends StatefulWidget {
   const JugadorHomeScreen({super.key});
@@ -17,6 +18,7 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
   final List<Widget> _screens = [
     const InicioTab(),
     const BookingsScreen(),
+    const CanchasMapScreen(),
     
     const Center(
       child: Text('Cerca / Mapa\n(Próximamente)', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),

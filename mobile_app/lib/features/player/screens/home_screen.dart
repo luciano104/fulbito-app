@@ -8,6 +8,8 @@ class CanchaFeed {
   final String ubicacion;
   final String precio;
   final String imagenUrl;
+  final double latitud;  // <-- NUEVO
+  final double longitud; // <-- NUEVO
   bool esFavorita;
 
   CanchaFeed({
@@ -16,6 +18,8 @@ class CanchaFeed {
     required this.ubicacion,
     required this.precio,
     required this.imagenUrl,
+    required this.latitud,
+    required this.longitud,
     this.esFavorita = false,
   });
 
@@ -25,7 +29,10 @@ class CanchaFeed {
       nombre: json['name'] ?? 'Complejo sin nombre',
       ubicacion: json['address'] ?? 'Ubicación no especificada',
       precio: json['base_price'] != null ? '\$${json['base_price']} / hr' : '\$10.000 / hr',
-      imagenUrl: json['image'] ?? 'https://images.unsplash.com/photo-1459865264687-595d652de67e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      imagenUrl: json['image'] ?? 'https://images.unsplash.com/photo-1459865264687-595d652de67e?...',
+      // Si el backend aún no manda coordenadas, forzamos unas cerca del centro para probar
+      latitud: json['latitude'] != null ? double.parse(json['latitude'].toString()) : -24.7829,
+      longitud: json['longitude'] != null ? double.parse(json['longitude'].toString()) : -65.4232,
       esFavorita: false,
     );
   }
