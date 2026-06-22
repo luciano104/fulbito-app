@@ -25,9 +25,9 @@ SECRET_KEY = 'django-insecure-y%pr)_s*e)n^1ou%wbi4gwm5qf4p1q^^wb_(c-1a^a9$)w3tl(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-GLOBAL_IP = '10.160.52.121'
+GLOBAL_IP = '192.168.100.9'
 GLOBAL_HOST = '8000'
-ALLOWED_HOSTS = [GLOBAL_IP, '27.0.0.1']
+ALLOWED_HOSTS = [GLOBAL_IP, '127.0.0.1']
 
 
 # Application definition
@@ -129,3 +129,21 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.authentication.CustomJWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}

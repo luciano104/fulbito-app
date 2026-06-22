@@ -17,8 +17,6 @@ from .serializers import UserSerializer
 def generar_token(user):
     """Genera un JWT con datos del usuario en el payload."""
     refresh = RefreshToken.for_user(user)
-    # Eliminamos user_id genérico y ponemos nuestros campos
-    del refresh.payload['user_id']
     refresh.payload['id'] = user.id
     refresh.payload['name'] = user.name
     refresh.payload['lastname'] = user.lastname
@@ -62,7 +60,7 @@ def register(request):
             return Response(
                 {
                     'user': build_user_response(user),
-                    'token': 'Bearer' + access_token
+                    'token': f'Bearer {access_token}'
                 }, 
                 status=status.HTTP_201_CREATED
                 )
@@ -120,7 +118,7 @@ def login(request):
         return Response(
             {
                 'user': build_user_response(user),
-                'token': 'Bearer' + access_token
+                'token': f'Bearer {access_token}'
             },
             status=status.HTTP_200_OK
         )

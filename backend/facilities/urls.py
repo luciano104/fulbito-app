@@ -19,7 +19,7 @@ urlpatterns = [
 
     # Reservas
     path('reservations/create/', views.create_reservation),
-    path('reservations/my-reservations/', views.my_reservations),
+    path('reservations/my_reservations/', views.my_reservations),
     path('reservations/<int:reservation_id>/status/', views.change_status_reservation),
     path('facilities/<int:facility_id>/reservations/', views.facility_reservations),
 

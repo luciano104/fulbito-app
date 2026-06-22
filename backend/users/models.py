@@ -39,3 +39,9 @@ class User(models.Model):
 	
 	def __str__(self):
 		return f'{self.name} {self.lastname} ({self.role})'
+	@property
+	def is_authenticated(self):
+		return True
+	@property
+	def is_anonymous(self):
+		return False
