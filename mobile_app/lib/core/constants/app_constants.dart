@@ -12,3 +12,8 @@ class AppRoutes {
   static const String playerHome = '/jugador/home';
   static const String ownerHome = '/dueno/home';
 }
+
+//URL base
+class ApiConstants {
+  static const String baseUrl = 'http://192.168.100.9:8000/api';
+}

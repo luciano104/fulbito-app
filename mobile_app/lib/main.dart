@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // <-- 1. Importamos Provider
 import 'core/constants/app_constants.dart';
 import 'features/auth/screens/role_selector_screen.dart';
 import 'features/player/screens/navigation_bar.dart';
 import 'features/owner/screens/owner_home_screen.dart';
-// Importá tus providers creados en el Paso 2
+// PROVIDERS
+import 'package:provider/provider.dart';
 import 'features/player/providers/canchas_provider.dart'; 
 import 'features/player/providers/reservas_provider.dart';
+import 'features/owner/providers/owner_bookings_provider.dart';
+import 'features/owner/providers/owner_dashboard_provider.dart';
+import 'features/owner/providers/owner_grid_provider.dart';
 
 void main() {
   runApp(const CanchasSaltaApp());
@@ -22,6 +25,9 @@ class CanchasSaltaApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => CanchasProvider()),
         ChangeNotifierProvider(create: (_) => ReservasProvider()),
+        ChangeNotifierProvider(create: (_) => OwnerBookingsProvider()),
+        ChangeNotifierProvider(create: (_) => OwnerDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => OwnerGridProvider())
       ],
       child: MaterialApp(
         title: 'Fulbito App',
@@ -38,7 +44,7 @@ class CanchasSaltaApp extends StatelessWidget {
         routes: {
           AppRoutes.roleSelector: (_) => const RoleSelectorScreen(),
           AppRoutes.playerHome:  (_) => const JugadorHomeScreen(),
-          AppRoutes.ownerHome:    (_) => const OwnerHomeScreen(),
+          AppRoutes.ownerHome:    (_) => const OwnerHomeScreen(token: "", facilityId: 0),
         },
       ),
     );
