@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; 
 import './../providers/canchas_provider.dart'; 
 import 'reservation_screen.dart'; 
+import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 
 class CanchaFeed {
   final String id;
@@ -85,33 +86,37 @@ class _InicioTabState extends State<InicioTab> {
             const SizedBox(height: 16), 
             
             
-            Expanded(
-              child: canchasProvider.isLoading 
-                ? const Center(child: CircularProgressIndicator(color: Colors.green))
-                : canchasProvider.canchas.isEmpty 
-                    ? const Center(child: Text("No hay complejos disponibles aún", style: TextStyle(color: Colors.white, fontSize: 16)))
-                    : ListView.builder(
-                        padding: EdgeInsets.zero, 
-                        itemCount: canchasProvider.canchas.length,
-                        itemBuilder: (context, index) {
-                          final cancha = canchasProvider.canchas[index];
-                          
-                          
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ReservationScreen(
-                                    token: 'Bearer token_falso', // <-- Token temporal
-                                    facilityId: cancha.id,
-                                    facilityName: cancha.nombre,
-                                    facilityImage: cancha.imagenUrl,
-                                  ),
+           
+          Expanded(
+            child: canchasProvider.isLoading 
+              ? const Center(child: CircularProgressIndicator(color: Colors.green))
+              : canchasProvider.canchas.isEmpty 
+                  ? const Center(child: Text("No hay complejos disponibles aún", style: TextStyle(color: Colors.white, fontSize: 16)))
+                  : ListView.builder(
+                      padding: EdgeInsets.zero, 
+                      itemCount: canchasProvider.canchas.length,
+                      itemBuilder: (context, index) {
+                        final cancha = canchasProvider.canchas[index];
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            
+                            final token = context.read<AuthProvider>().token ?? '';
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ReservationScreen(
+                                  token: token, 
+                                  facilityId: cancha.id,
+                                  facilityName: cancha.nombre,
+                                  facilityImage: cancha.imagenUrl,
                                 ),
-                              );
-                            },
-                            child: Card(
+                              ),
+                            );
+                          },
+                          child: Card(
+                            // ... todo el resto de tu Card sigue exactamente igual abajo ...
                               elevation: 4,
                               margin: const EdgeInsets.only(bottom: 20.0),
                               color: Colors.grey[900], 

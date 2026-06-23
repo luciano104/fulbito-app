@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import './../providers/canchas_provider.dart';
 import 'reservation_screen.dart'; 
 import 'home_screen.dart';
+import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 
 class CanchasMapScreen extends StatefulWidget {
   const CanchasMapScreen({super.key});
@@ -18,11 +19,14 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
 
   
   void onMarkerTap(BuildContext context, CanchaFeed cancha) {
+    
+    final token = context.read<AuthProvider>().token ?? '';
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ReservationScreen(
-          token: 'Bearer token_falso', // <-- Token temporal
+          token: token, 
           facilityId: cancha.id,
           facilityName: cancha.nombre,
           facilityImage: cancha.imagenUrl,
