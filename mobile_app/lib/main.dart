@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_constants.dart';
-import 'features/auth/screens/role_selector_screen.dart';
-import 'features/player/screens/navigation_bar.dart';
-import 'features/owner/screens/owner_home_screen.dart';
+//SCREENS
+import 'package:mobile_app/features/auth/screens/login_screen.dart';
+import 'package:mobile_app/features/auth/screens/register_screen.dart';
+import 'package:mobile_app/features/player/screens/navigation_bar.dart';
 // PROVIDERS
 import 'package:provider/provider.dart';
+// AUTH
+import 'package:mobile_app/features/auth/providers/auth_provider.dart';
+// JUGADOR
 import 'features/player/providers/canchas_provider.dart'; 
 import 'features/player/providers/reservas_provider.dart';
+// DUEÑO
 import 'features/owner/providers/owner_bookings_provider.dart';
 import 'features/owner/providers/owner_dashboard_provider.dart';
 import 'features/owner/providers/owner_grid_provider.dart';
@@ -23,11 +28,15 @@ class CanchasSaltaApp extends StatelessWidget {
     // 2. Envolvemos todo en MultiProvider
     return MultiProvider(
       providers: [
+        // Auth
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        // Jugador
         ChangeNotifierProvider(create: (_) => CanchasProvider()),
         ChangeNotifierProvider(create: (_) => ReservasProvider()),
-        ChangeNotifierProvider(create: (_) => OwnerBookingsProvider()),
+        // Dueño
         ChangeNotifierProvider(create: (_) => OwnerDashboardProvider()),
-        ChangeNotifierProvider(create: (_) => OwnerGridProvider())
+        ChangeNotifierProvider(create: (_) => OwnerBookingsProvider()),
+        ChangeNotifierProvider(create: (_) => OwnerGridProvider()),
       ],
       child: MaterialApp(
         title: 'Fulbito App',
@@ -40,11 +49,11 @@ class CanchasSaltaApp extends StatelessWidget {
           useMaterial3: true,
           fontFamily: 'SF Pro Display',
         ),
-        initialRoute: AppRoutes.roleSelector,
+        initialRoute: AppRoutes.login,
         routes: {
-          AppRoutes.roleSelector: (_) => const RoleSelectorScreen(),
-          AppRoutes.playerHome:  (_) => const JugadorHomeScreen(),
-          AppRoutes.ownerHome:    (_) => const OwnerHomeScreen(token: "", facilityId: 0),
+          AppRoutes.login:      (_) => const LoginScreen(),
+          AppRoutes.register:   (_) => const RegisterScreen(),
+          AppRoutes.playerHome: (_) => const JugadorHomeScreen(),
         },
       ),
     );

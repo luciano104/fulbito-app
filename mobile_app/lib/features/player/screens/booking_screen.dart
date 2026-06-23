@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 import 'package:provider/provider.dart'; // Importamos Provider
 import './../providers/reservas_provider.dart'; // Ajustá la ruta
 
@@ -45,9 +46,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-      Provider.of<ReservasProvider>(context, listen: false).obtenerReservas()
-    );
+    Future.microtask(() {
+      final token = context.read<AuthProvider>().token!;
+      Provider.of<ReservasProvider>(context, listen: false).obtenerReservas(token);
+    });
   }
 
   @override
@@ -79,62 +81,78 @@ class _BookingsScreenState extends State<BookingsScreen> {
             child: reservasProvider.isLoading 
               ? const Center(child: CircularProgressIndicator(color: Colors.green))
               : reservasProvider.misReservas.isEmpty 
-                  ? const Center(child: Text("No tenés reservas activas\n(O falta iniciar sesión)", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16)))
-                  : ListView.builder(
-                      itemCount: reservasProvider.misReservas.length,
-                      itemBuilder: (context, index) {
-                        final reserva = reservasProvider.misReservas[index];
-                        
-                        return Card(
-                          elevation: 4,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          color: Colors.grey[900], 
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
-                                  child: const Icon(Icons.sports_soccer, color: Colors.green, size: 30),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+              ? const Center(child: Text("No tenés reservas activas", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16)))
+              : ListView.builder(
+                  itemCount: reservasProvider.misReservas.length,
+                  itemBuilder: (context, index) {
+                    final reserva = reservasProvider.misReservas[index];
+                    
+                    return Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      color: Colors.grey[900], 
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                              child: const Icon(Icons.sports_soccer, color: Colors.green, size: 30),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(reserva.nombreCancha, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis,),
+                                  const SizedBox(height: 4),
+                                  Text(reserva.direccion, style: TextStyle(color: Colors.grey[400], fontSize: 13), overflow: TextOverflow.ellipsis,),
+                                  const SizedBox(height: 6),
+                                  Row(
                                     children: [
-                                      Text(reserva.nombreCancha, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                                      const SizedBox(height: 4),
-                                      Text(reserva.direccion, style: TextStyle(color: Colors.grey[400], fontSize: 14)),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.calendar_today, size: 14, color: Colors.greenAccent),
-                                          const SizedBox(width: 4),
-                                          Text('${reserva.fecha} - ${reserva.hora}', style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.greenAccent)),
-                                        ],
+                                      const Icon(Icons.calendar_today, size: 13, color: Colors.greenAccent),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          '${reserva.fecha} · ${reserva.hora}',
+                                          style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.greenAccent,
+                                              fontWeight: FontWeight.w500),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: reserva.estado == 'CONFIRMADA' ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    reserva.estado,
-                                    style: TextStyle(fontSize: 12, color: reserva.estado == 'CONFIRMADA' ? Colors.green : Colors.orange, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: reserva.estado == 'confirmed' ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                reserva.estado == 'confirmed' ? 'CONFIRMADA' : 'PENDIENTE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: reserva.estado == 'confirmed'
+                                      ? Colors.green
+                                      : Colors.orange,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),
