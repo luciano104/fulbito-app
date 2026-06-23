@@ -25,6 +25,13 @@ def generar_token(user):
 
 def build_user_response(user):
     """Arma el diccionario de respuesta estándar para un usuario."""
+    facility_id = None
+    if user.role == 'owner':
+        try:
+            facility_id = user.facility.id  # related_name='facility' del OneToOneField
+        except:
+            facility_id = None
+
     return {
         'id': user.id,
         'name': user.name,
@@ -34,6 +41,7 @@ def build_user_response(user):
         'image': user.image,
         'role': user.role,
         'notification_token': user.notification_token,
+        'facility_id': facility_id,
     }
 
 
