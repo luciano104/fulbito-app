@@ -8,9 +8,9 @@ class AppRoles {
 /// Nombres de rutas para la navegación.
 /// Usar siempre estas constantes en lugar de strings sueltos.
 class AppRoutes {
-  static const String roleSelector = '/';
+  static const String login = '/';
+  static const String register = '/register';
   static const String playerHome = '/jugador/home';
-  static const String ownerHome = '/dueno/home';
 }
 
 //URL base
