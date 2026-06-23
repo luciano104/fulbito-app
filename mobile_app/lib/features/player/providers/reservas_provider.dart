@@ -7,6 +7,61 @@ import '/features/player/screens/booking_screen.dart';
 class ReservasProvider extends ChangeNotifier {
   List<ReservaActiva> misReservas = [];
   bool isLoading = true;
+  List<dynamic> _horariosDisponibles = [];
+  List<dynamic> get availableSchedules => _horariosDisponibles;
+
+  Future<void> cargarHorariosDeCancha(String token, String courtId, String fechaFormateada) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/schedules/$courtId/?date=$fechaFormateada');
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token, 
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _horariosDisponibles = data['schedules'] ?? [];
+      }
+    } catch (e) {
+      print('Error al cargar horarios: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> solicitarReserva(String token, String scheduleId, String fechaFormateada) async {
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/reservations/');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token, 
+        },
+        body: jsonEncode({
+          'schedule': scheduleId,
+          'date': fechaFormateada,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Error al solicitar reserva: $e');
+      return false;
+    }
+  }
 
   Future<void> obtenerReservas(String token) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/reservations/my_reservations/');

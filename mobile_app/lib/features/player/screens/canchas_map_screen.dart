@@ -3,8 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import './../providers/canchas_provider.dart';
-import 'review_form_screen.dart'; 
+import 'reservation_screen.dart'; 
 import 'home_screen.dart';
+import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 
 class CanchasMapScreen extends StatefulWidget {
   const CanchasMapScreen({super.key});
@@ -16,19 +17,26 @@ class CanchasMapScreen extends StatefulWidget {
 class _CanchasMapScreenState extends State<CanchasMapScreen> {
   final MapController mapController = MapController();
 
-  // Función que se ejecuta al tocar un PIN rojo del mapa
+  
   void onMarkerTap(BuildContext context, CanchaFeed cancha) {
+    
+    final token = context.read<AuthProvider>().token ?? '';
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ReviewFormScreen(cancha: cancha),
+        builder: (_) => ReservationScreen(
+          token: token, 
+          facilityId: cancha.id,
+          facilityName: cancha.nombre,
+          facilityImage: cancha.imagenUrl,
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Enganchamos el mapa a tu provider global
     final provider = context.watch<CanchasProvider>();
 
     return Scaffold(
@@ -44,7 +52,7 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
               FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
-                  initialCenter: const LatLng(-24.7829, -65.4232), // Coordenadas centrales
+                  initialCenter: const LatLng(-24.7829, -65.4232),
                   initialZoom: 13.5,
                 ),
                 children: [
@@ -53,7 +61,6 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
                     userAgentPackageName: 'com.fulbito.app',
                   ),
                   MarkerLayer(
-                    // Transformamos cada cancha en un Marker del mapa
                     markers: provider.canchas.map((cancha) {
                       return Marker(
                         point: LatLng(cancha.latitud, cancha.longitud),
@@ -63,7 +70,7 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
                           onTap: () => onMarkerTap(context, cancha),
                           child: const Icon(
                             Icons.location_on,
-                            color: Colors.greenAccent, // Estilo fulbito
+                            color: Colors.greenAccent,
                             size: 45,
                           ),
                         ),
@@ -72,10 +79,9 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
                   ),
                 ],
               ),
-              // Botones de Zoom del profe
               Positioned(
                 right: 15,
-                bottom: 15, // Los pasé abajo para que no tapen nada arriba
+                bottom: 15, 
                 child: Column(
                   children: [
                     FloatingActionButton.small(
