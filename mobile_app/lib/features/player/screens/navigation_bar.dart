@@ -11,10 +11,10 @@ class JugadorHomeScreen extends StatefulWidget {
 }
 
 class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
-  // Variable para controlar qué pestaña está activa
+  
   int _selectedIndex = 0;
 
-  // Lista de pantallas "vacías" con los carteles de próximamente
+  
   final List<Widget> _screens = [
     const InicioTab(),
     const BookingsScreen(),
@@ -25,7 +25,7 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
     ),
   ];
 
-  // Función que se ejecuta al tocar un ícono
+ 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -41,7 +41,7 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        // Verde para el seleccionado
+        
         selectedItemColor: const Color(0xFF00C853), 
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Importamos Provider
-import './../providers/reservas_provider.dart'; // Ajustá la ruta
+import 'package:provider/provider.dart'; 
+import './../providers/reservas_provider.dart'; 
 
 class ReservaActiva {
   final String id;
@@ -52,7 +52,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Nos conectamos al Provider de reservas
+    
     final reservasProvider = Provider.of<ReservasProvider>(context);
 
     return Padding(
@@ -60,7 +60,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- ENCABEZADO ---
+         
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

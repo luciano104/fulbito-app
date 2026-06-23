@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import './../providers/canchas_provider.dart'; 
+
 import 'home_screen.dart';
 
 class ReviewFormScreen extends StatefulWidget {
-  final CanchaFeed cancha; // Recibimos la cancha completa
+  final CanchaFeed cancha; 
 
   const ReviewFormScreen({super.key, required this.cancha});
 
@@ -14,13 +14,12 @@ class ReviewFormScreen extends StatefulWidget {
 class _ReviewFormScreenState extends State<ReviewFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _comentarioController = TextEditingController();
-  int rating = 5; // Empieza en 5 estrellas por defecto
+  int rating = 5; 
 
   Future<void> _guardarResena() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Acá en el futuro tu compañero hará una API POST a Django
-    // por ahora, hacemos un "simulacro" de guardado
+    
     print('Reseña guardada para: ${widget.cancha.nombre}');
     print('Estrellas: $rating');
     print('Comentario: ${_comentarioController.text}');
@@ -29,7 +28,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
       const SnackBar(content: Text('¡Reseña enviada con éxito!'), backgroundColor: Colors.green),
     );
 
-    Navigator.pop(context); // Volvemos al mapa
+    Navigator.pop(context); 
   }
 
   @override
