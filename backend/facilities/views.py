@@ -26,7 +26,32 @@ def create_facility(request):
     """El dueño registra su complejo al registrarse."""
     serializer = FacilitySerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(admin=request.user)
+        facility = serializer.save(admin=request.user)
+
+        #Cancha por defecto
+        court = Court.objects.create(
+            facility = facility,
+            team_size = 'F5',
+            surface=facility.surface_type,
+            price=facility.base_price,
+            available = True,
+        )
+        horarios = [
+            ('16:00:00', '17:00:00'),
+            ('17:00:00', '18:00:00'),
+            ('18:00:00', '19:00:00'),
+            ('19:00:00', '20:00:00'),
+            ('20:00:00', '21:00:00'),
+            ('21:00:00', '22:00:00'),
+        ]
+        for start, end in horarios:
+            for weekday in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
+                BaseSchedule.objects.create(
+                    court=court,
+                    weekday=weekday,
+                    start_time=start,
+                    end_time=end,
+                )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
