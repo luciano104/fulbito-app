@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/core/constants/app_constants.dart';
+import 'package:mobile_app/features/owner/screens/owner_form_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 
@@ -52,7 +54,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
 
-      Navigator.pop(context); // vuelve al login
+      if (_selectedRole == 'owner') {
+      // El dueño tiene que registrar su complejo antes de entrar
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OwnerFormScreen()),
+        );
+      } else {
+        // El jugador va directo al home
+        Navigator.pushReplacementNamed(context, AppRoutes.playerHome);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

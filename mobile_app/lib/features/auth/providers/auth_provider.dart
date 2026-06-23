@@ -73,7 +73,7 @@ class AuthProvider extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      await _authService.register(
+      final response = await _authService.register(
         name: name,
         lastname: lastname,
         email: email,
@@ -81,6 +81,10 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         role: role,
       );
+
+      user = AuthUser.fromJson(response['user']);
+      token = response['token'];
+      
     } finally {
       isLoading = false;
       notifyListeners();
