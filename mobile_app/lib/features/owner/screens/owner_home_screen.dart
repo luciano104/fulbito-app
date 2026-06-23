@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'owner_dashboard_tab.dart';
+import 'package:mobile_app/features/auth/screens/owner_grid_tab.dart';
+import 'package:mobile_app/features/owner/screens/owner_bookings_tab.dart';
+import 'package:mobile_app/features/owner/screens/owner_dashboard_tab.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
-  const OwnerHomeScreen({super.key});
+  final String token;
+  final int facilityId;
+
+  const OwnerHomeScreen({
+    super.key,
+    required this.token,
+    required this.facilityId,
+    });
 
   @override
   State<OwnerHomeScreen> createState() => _OwnerHomeScreenState();
@@ -12,13 +21,18 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   // Variable para saber qué pestaña está seleccionada (0, 1 o 2)
   int _currentIndex = 0;
 
-  // Lista de las 3 pantallas que corresponden a cada pestaña
-  // Por ahora ponemos contenedores simples con texto para probar la navegación
-  final List<Widget> _paginas = [
-    const OwnerDashboardTab(),
-    const Center(child: Text('Pestaña 2: Gestión de Reservas y Feedback', style: TextStyle(fontSize: 18))),
-    const Center(child: Text('Pestaña 3: Grilla Horaria Global', style: TextStyle(fontSize: 18))),
-  ];
+  late final List<Widget> _paginas;
+
+  @override
+  void initState(){
+    super.initState();
+    //Pasamos token y facilityId a cada tab
+    _paginas = [
+      OwnerDashboardTab(token: widget.token, facilityId: widget.facilityId),
+      OwnerBookingsTab(token: widget.token, facilityId: widget.facilityId),
+      OwnerGridTab(token: widget.token, facilityId: widget.facilityId),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +50,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       // La barra de navegación inferior
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index; // Cambia la pestaña activa al hacer tap
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: Colors.green, // Color del ícono seleccionado
         unselectedItemColor: Colors.grey, // Color de los íconos no seleccionados
         type: BottomNavigationBarType.fixed, // Mantiene los nombres fijos siempre
@@ -72,7 +82,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       case 2:
         return 'Matriz Horaria';
       default:
-        return 'Complejo App';
+        return 'FulbitoApp';
     }
   }
 }
