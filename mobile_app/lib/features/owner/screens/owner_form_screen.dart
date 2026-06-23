@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:mobile_app/features/owner/screens/location_picker_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,10 +20,9 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
 
   String _nombre = '';
   String _direccion = '';
-  String _latitud = '';
-  String _longitud = '';
   String _precioBase = '';
   String _superficie = 'grass'; // valor por defecto
+  LatLng? _ubicacion;
 
   bool _isLoading = false;
 
@@ -33,8 +34,35 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
     {'value': 'dirt', 'label': 'Tierra'},
   ];
 
+  Future<void> _abrirMapaPicker() async {
+    final resultado = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          initialLat: _ubicacion?.latitude,
+          initialLng: _ubicacion?.longitude,
+        ),
+      ),
+    );
+ 
+    if (resultado != null) {
+      setState(() => _ubicacion = resultado);
+    }
+  }
+  
   Future<void> _enviarFormulario() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    if (_ubicacion == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tenés que elegir la ubicación en el mapa'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     _formKey.currentState!.save();
 
     setState(() => _isLoading = true);
@@ -52,8 +80,8 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
         body: json.encode({
           'name': _nombre,
           'address': _direccion,
-          'latitude': double.parse(_latitud),
-          'longitude': double.parse(_longitud),
+          'latitude': _ubicacion!.latitude,
+          'longitude': _ubicacion!.longitude,
           'base_price': _precioBase,
           'surface_type': _superficie,
         }),
@@ -231,47 +259,59 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
                                 fontSize: 16, fontWeight: FontWeight.bold)),
                       ]),
                       const Divider(),
-                      const Text(
-                        'Podés obtener las coordenadas buscando tu dirección en Google Maps y copiando los números.',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
 
-                      Row(children: [
-                        Expanded(
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Latitud',
-                              hintText: '-24.7821',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true, signed: true),
-                            validator: (v) {
-                              if (v!.trim().isEmpty) return 'Obligatorio';
-                              if (double.tryParse(v) == null) return 'Número inválido';
-                              return null;
-                            },
-                            onSaved: (v) => _latitud = v!.trim(),
+                      //Estado de la ubicación
+                      if (_ubicacion == null)
+                        const Text(
+                          'Todavía no elegiste una ubicación.',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.withOpacity(0.3)),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Longitud',
-                              hintText: '-65.4232',
+                          child: Row(children: [
+                            const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Lat: ${_ubicacion!.latitude.toStringAsFixed(6)}\n'
+                                'Lng: ${_ubicacion!.longitude.toStringAsFixed(6)}',
+                                style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 13,
+                                    fontFamily: 'monospace'),
+                              ),
                             ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true, signed: true),
-                            validator: (v) {
-                              if (v!.trim().isEmpty) return 'Obligatorio';
-                              if (double.tryParse(v) == null) return 'Número inválido';
-                              return null;
-                            },
-                            onSaved: (v) => _longitud = v!.trim(),
-                          ),
+                          ]),
                         ),
-                      ]),
+
+                      const SizedBox(height: 12),
+ 
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _abrirMapaPicker,
+                          icon: Icon(
+                            _ubicacion == null ? Icons.map : Icons.edit_location_alt,
+                            color: Colors.green,
+                          ),
+                          label: Text(
+                            _ubicacion == null ? 'Elegir en el mapa' : 'Cambiar ubicación',
+                            style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: const BorderSide(color: Colors.green),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ), 
+                      ), 
                     ],
                   ),
                 ),
