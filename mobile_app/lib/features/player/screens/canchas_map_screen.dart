@@ -17,10 +17,42 @@ class CanchasMapScreen extends StatefulWidget {
 
 class _CanchasMapScreenState extends State<CanchasMapScreen> {
   final MapController mapController = MapController();
-
   
+  // 1. VARIABLE PARA GUARDAR TU UBICACIÓN
+  LatLng? _miUbicacionActual;
+
+  // 2. INIT STATE PARA PEDIR LA UBICACIÓN AL ABRIR EL MAPA
+  @override
+  void initState() {
+    super.initState();
+    _obtenerUbicacionDelUsuario();
+  }
+
+  // 3. FUNCIÓN QUE ACTIVA EL GPS
+  Future<void> _obtenerUbicacionDelUsuario() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    Position position = await Geolocator.getCurrentPosition();
+
+    if (mounted) {
+      setState(() {
+        _miUbicacionActual = LatLng(position.latitude, position.longitude);
+      });
+    }
+  }
+
   void onMarkerTap(BuildContext context, CanchaFeed cancha) {
-    
     final token = context.read<AuthProvider>().token ?? '';
 
     Navigator.push(
@@ -53,7 +85,7 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
               FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
-                  initialCenter: const LatLng(-24.7829, -65.4232),
+                  initialCenter: const LatLng(-24.7829, -65.4232), // Centro de Salta
                   initialZoom: 13.5,
                 ),
                 children: [
@@ -62,21 +94,45 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
                     userAgentPackageName: 'com.fulbito.app',
                   ),
                   MarkerLayer(
-                    markers: provider.canchas.map((cancha) {
-                      return Marker(
-                        point: LatLng(cancha.latitud, cancha.longitud),
-                        width: 50,
-                        height: 50,
-                        child: GestureDetector(
-                          onTap: () => onMarkerTap(context, cancha),
-                          child: const Icon(
-                            Icons.location_on,
-                            color: Colors.greenAccent,
-                            size: 45,
+                    markers: [
+                      // 4. ESPARCIMOS LOS PINES DE LAS CANCHAS
+                      ...provider.canchas.map((cancha) {
+                        return Marker(
+                          point: LatLng(cancha.latitud, cancha.longitud),
+                          width: 50,
+                          height: 50,
+                          child: GestureDetector(
+                            onTap: () => onMarkerTap(context, cancha),
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Colors.greenAccent,
+                              size: 45,
+                            ),
+                          ),
+                        );
+                      }), // <-- Ojo que le saqué el .toList() acá para que funcione con los 3 puntos (...)
+
+                      // 5. AGREGAMOS TU PIN AZUL (Si ya tenemos la ubicación)
+                      if (_miUbicacionActual != null)
+                        Marker(
+                          point: _miUbicacionActual!,
+                          width: 50,
+                          height: 50,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.my_location,
+                                color: Colors.blueAccent,
+                                size: 30,
+                              ),
+                            ),
                           ),
                         ),
-                      );
-                    }).toList(),
+                    ],
                   ),
                 ],
               ),

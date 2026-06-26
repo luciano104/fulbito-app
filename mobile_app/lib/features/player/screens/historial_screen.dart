@@ -22,7 +22,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
     });
   }
 
-  // --- LÓGICA DEL POP-UP (Inspirado en el código de tu profe) ---
+  // --- LÓGICA DEL POP-UP ---
   void _mostrarDialogoResena(BuildContext context, String reservaId, String nombreCancha) {
     int rating = 5; // Por defecto 5 estrellas
     final comentarioController = TextEditingController();
@@ -30,7 +30,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        // Usamos StatefulBuilder para que el Slider se actualice dentro del Pop-up
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -94,7 +93,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('¡Reseña publicada!'), backgroundColor: Colors.green),
                       );
-                      // Recargamos la lista para que desaparezca el botón
+                      // Recargamos la lista para actualizar los datos
                       context.read<ReservasProvider>().obtenerReservas(token);
                     }
                   },
@@ -112,8 +111,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
   Widget build(BuildContext context) {
     final reservasProvider = context.watch<ReservasProvider>();
     
-    // Filtramos para mostrar SOLO las reservas pasadas o confirmadas (Historial)
-    // Asumimos que si no es PENDIENTE, va al historial.
     final historial = reservasProvider.misReservas
         .where((r) => r.estado != 'pending')
         .toList();
@@ -155,39 +152,55 @@ class _HistorialScreenState extends State<HistorialScreen> {
                     itemCount: historial.length,
                     itemBuilder: (context, index) {
                       final reserva = historial[index];
-                      // Para habilitar la reseña: debe estar finalizada y no tener reseña previa
-                      final puedeDejarResena = (reserva.estado == 'completed' || reserva.estado == 'finalizada') && !reserva.hasReview;
+                      
+                      // 1. Normalizamos el texto: lo pasamos a minúsculas
+                      final estadoNormalizado = reserva.estado.toLowerCase();
+                      
+                      // 2. Aceptamos cualquier variación y validamos si ya tiene reseña
+                      final puedeDejarResena = (estadoNormalizado.contains('finalizad') || estadoNormalizado.contains('completed')) && !reserva.hasReview;
 
-                      return Card(
-                        color: Colors.grey[900],
-                        margin: const EdgeInsets.only(bottom: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(reserva.nombreCancha, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                              const SizedBox(height: 8),
-                              Text('${reserva.fecha} · ${reserva.hora}', style: const TextStyle(color: Colors.greenAccent)),
-                              const SizedBox(height: 12),
-                              
-                              if (puedeDejarResena)
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(color: Colors.amber),
-                                      foregroundColor: Colors.amber,
+                      // 3. Envolvemos la tarjeta en un GestureDetector
+                      return GestureDetector(
+                        onTap: () {
+                          if (puedeDejarResena) {
+                            _mostrarDialogoResena(context, reserva.id, reserva.nombreCancha);
+                          } else if (reserva.hasReview) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Ya dejaste una reseña para esta reserva')),
+                            );
+                          }
+                        },
+                        child: Card(
+                          color: Colors.grey[900],
+                          margin: const EdgeInsets.only(bottom: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(reserva.nombreCancha, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const SizedBox(height: 8),
+                                Text('${reserva.fecha} · ${reserva.hora}', style: const TextStyle(color: Colors.greenAccent)),
+                                const SizedBox(height: 12),
+                                
+                                if (puedeDejarResena)
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: Colors.amber),
+                                        foregroundColor: Colors.amber,
+                                      ),
+                                      icon: const Icon(Icons.star_outline),
+                                      label: const Text('Dejar Reseña'),
+                                      onPressed: () => _mostrarDialogoResena(context, reserva.id, reserva.nombreCancha),
                                     ),
-                                    icon: const Icon(Icons.star_outline),
-                                    label: const Text('Dejar Reseña'),
-                                    onPressed: () => _mostrarDialogoResena(context, reserva.id, reserva.nombreCancha),
                                   ),
-                                ),
-                              if (reserva.hasReview)
-                                const Text('⭐ Ya calificaste este complejo', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
-                            ],
+                                if (reserva.hasReview)
+                                  const Text('⭐ Ya calificaste este complejo', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                              ],
+                            ),
                           ),
                         ),
                       );
