@@ -6,6 +6,7 @@ import './../providers/canchas_provider.dart';
 import 'reservation_screen.dart'; 
 import 'home_screen.dart';
 import 'package:mobile_app/features/auth/providers/auth_provider.dart';
+import 'package:geolocator/geolocator.dart';
 
 class CanchasMapScreen extends StatefulWidget {
   const CanchasMapScreen({super.key});

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 import 'package:provider/provider.dart'; 
-import './../providers/reservas_provider.dart'; 
+import './../providers/reservas_provider.dart';
+import 'package:mobile_app/features/player/screens/historial_screen.dart';
 
 class ReservaActiva {
   final String id;
@@ -10,6 +11,7 @@ class ReservaActiva {
   final String fecha;
   final String hora;
   final String estado;
+  final bool hasReview; // NUEVO
 
   ReservaActiva({
     required this.id,
@@ -18,6 +20,7 @@ class ReservaActiva {
     required this.fecha,
     required this.hora,
     required this.estado,
+    required this.hasReview, // NUEVO
   });
 
   factory ReservaActiva.fromJson(Map<String, dynamic> json) {
@@ -31,6 +34,7 @@ class ReservaActiva {
       fecha: json['date'] ?? 'Fecha a confirmar',
       hora: '$startTime - $endTime',
       estado: json['status'] ?? 'PENDIENTE',
+      hasReview: json['has_review'] ?? false, // NUEVO: Django manda esto gracias al serializer de tu amigo
     );
   }
 }
@@ -69,7 +73,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
             children: [
               const Text('Reservas Activas', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
               TextButton.icon(
-                onPressed: () => print('Ir al historial'),
+                onPressed: () {
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const HistorialScreen())
+                  );
+                },
                 icon: const Icon(Icons.history, color: Colors.green),
                 label: const Text('Historial', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
               ),

@@ -62,7 +62,7 @@ class ReservasProvider extends ChangeNotifier {
       return false;
     }
   }
-
+  
   Future<void> obtenerReservas(String token) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/reservations/my_reservations/');
     try {
@@ -83,6 +83,34 @@ class ReservasProvider extends ChangeNotifier {
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+  Future<bool> enviarResena(String token, String reservaId, int rating, String comentario) async {
+    try {
+      // ATENCIÓN: Verificá con tu compañero si esta es la URL exacta en urls.py
+      final url = Uri.parse('${ApiConstants.baseUrl}/reviews/'); 
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+        },
+        body: jsonEncode({
+          'reservation': reservaId, // ID de la reserva
+          'rating': rating,         // Estrellas (1-5)
+          'comment': comentario,    // Texto
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return true;
+      }
+      print('Error al enviar reseña: ${response.body}');
+      return false;
+    } catch (e) {
+      print('Error de red al enviar reseña: $e');
+      return false;
     }
   }
 }
