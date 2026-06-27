@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
+from datetime import datetime
 
 from .models import Facility, Court, BaseSchedule, Reservation, Review, Favorite
 from .serializers import (
@@ -174,7 +176,17 @@ def list_schedules(request, court_id):
 
     schedules = BaseSchedule.objects.filter(court=court)
 
-    # Si se pasa una fecha, marcamos cuáles ya están reservados
+    if date:
+        try:
+            fecha_pedida = datetime.strptime(date, '%Y-%m-%d').date()
+            fecha_hoy = timezone.now().date()
+            hora_ahora = timezone.now().time()
+
+            if fecha_pedida == fecha_hoy:
+                schedules = schedules.filter(start_time__gt=hora_ahora)
+        except ValueError:
+            return Response({'message': 'Formato de fecha inválido. Use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+
     if date:
         reserved = Reservation.objects.filter(
             schedule__court=court,
@@ -199,6 +211,19 @@ def list_schedules(request, court_id):
 #  RESERVAS
 # ─────────────────────────────────────────────
 
+def actualizar_reservas_completadas(reservations_qs):
+    """Marca como completed las reservas cuya hora final ya pasó."""
+    ahora = timezone.now()
+    fecha_hoy = ahora.date()
+    hora_ahora = ahora.time()
+
+    for reserva in reservations_qs.filter(status=Reservation.STATUS_CONFIRMED):
+        fin = reserva.schedule.end_time
+        if reserva.date < fecha_hoy or (reserva.date == fecha_hoy and fin <= hora_ahora):
+            reserva.status = Reservation.STATUS_COMPLETED
+            reserva.save()
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_reservation(request):
@@ -216,6 +241,7 @@ def my_reservations(request):
     """El jugador ve su historial de reservas."""
     reservations = Reservation.objects.filter(player=request.user).order_by('-date')
     serializer = ReservationSerializer(reservations, many=True)
+    actualizar_reservas_completadas(reservations)
     return Response({'reservations': serializer.data}, status=status.HTTP_200_OK)
 
 
@@ -235,6 +261,7 @@ def facility_reservations(request, facility_id):
         schedule__court__facility=facility
     ).order_by('-date')
 
+    actualizar_reservas_completadas(reservations)
     serializer = ReservationSerializer(reservations, many=True)
     return Response({'reservations': serializer.data}, status=status.HTTP_200_OK)
 
@@ -279,7 +306,7 @@ def create_review(request):
         reviews = Review.objects.filter(
             review__schedule__court__facility=facility
         )
-        total = review.count()
+        total = reviews.count()
         avg = sum(r.rating for r in reviews) / total
 
         facility.avg_rating = round(avg, 1)

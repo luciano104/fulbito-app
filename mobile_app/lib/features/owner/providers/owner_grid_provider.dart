@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_app/core/constants/app_constants.dart';
-import 'package:mobile_app/features/auth/screens/owner_grid_tab.dart';
+import 'package:mobile_app/features/owner/screens/owner_grid_tab.dart';
 
 
 class OwnerGridProvider extends ChangeNotifier {

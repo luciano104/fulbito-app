@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_app/features/auth/screens/owner_grid_tab.dart';
+import 'package:mobile_app/features/owner/screens/owner_grid_tab.dart';
 import 'package:mobile_app/features/owner/screens/owner_bookings_tab.dart';
 import 'package:mobile_app/features/owner/screens/owner_dashboard_tab.dart';
 
