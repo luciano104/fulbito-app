@@ -134,6 +134,26 @@ Screen  →  Provider  →  Service  →  ApiClient  →  Django REST API
 
 ---
 ```
+## 📸 Capturas de Pantalla
+
+### 🔑 Acceso y Módulo del Jugador
+Sección orientada al usuario final, permitiendo el ingreso seguro, la exploración de complejos deportivos mediante geolocalización en Salta Capital y el listado de canchas disponibles.
+
+| Pantalla de Login | Lista de Canchas Disponibles | Mapa de Canchas Cercanas |
+|:---:|:---:|:---:|
+| <img src="login.jpeg" width="250"> | <img src="panelJugador.jpeg" width="250"> | <img src="busMapa.jpeg" width="250"> |
+
+---
+
+### 🏢 Módulo de Administración (Dueño de Complejo)
+Panel de control centralizado para el administrador del club. Permite monitorear el resumen financiero diario, tasas de ocupación horaria y pausar canchas de forma instantánea por tareas de mantenimiento.
+
+| Panel de Control (Dashboard) |
+|:---:|
+| <img src="panelDeDueño.jpeg" width="250"> |  <img src="panelDeDueñoReservas.jpeg" width="250"> |
+
+```
+```
 📜 Licencia del Proyecto
 Este proyecto se distribuye de manera abierta bajo los términos y condiciones de la Licencia MIT.
 
