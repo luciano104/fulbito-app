@@ -148,11 +148,12 @@ Sección orientada al usuario final, permitiendo el ingreso seguro, la exploraci
 ### 🏢 Módulo de Administración (Dueño de Complejo)
 Panel de control centralizado para el administrador del club. Permite monitorear el resumen financiero diario, tasas de ocupación horaria y pausar canchas de forma instantánea por tareas de mantenimiento.
 
-| Panel de Control (Dashboard) |
-|:---:|
-| <img src="panelDeDueño.jpeg" width="250"> |  <img src="panelDeDueñoReservas.jpeg" width="250"> |
+| Panel de Control | Panel de Reservas |
+|:---:|:---:|
+| <img src="panelDeDueño.jpeg" width="250"> | <img src="panelDeDueñoReservas.jpeg" width="250"> |
 
 ```
+---
 ```
 📜 Licencia del Proyecto
 Este proyecto se distribuye de manera abierta bajo los términos y condiciones de la Licencia MIT.
