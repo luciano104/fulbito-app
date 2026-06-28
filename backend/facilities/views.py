@@ -47,13 +47,11 @@ def create_facility(request):
             ('21:00:00', '22:00:00'),
         ]
         for start, end in horarios:
-            for weekday in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
-                BaseSchedule.objects.create(
-                    court=court,
-                    weekday=weekday,
-                    start_time=start,
-                    end_time=end,
-                )
+            BaseSchedule.objects.create(
+                court=court,
+                start_time=start,
+                end_time=end,
+            )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -166,38 +164,39 @@ def create_schedule(request, court_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_schedules(request, court_id):
-    """Lista los horarios disponibles de una cancha para una fecha dada."""
-    date = request.query_params.get('date')
+    date_str = request.query_params.get('date')
 
     try:
         court = Court.objects.get(id=court_id)
     except Court.DoesNotExist:
         return Response({'message': 'Cancha no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
-    schedules = BaseSchedule.objects.filter(court=court)
+    schedules = BaseSchedule.objects.filter(court=court).order_by('start_time')
 
-    if date:
-        try:
-            fecha_pedida = datetime.strptime(date, '%Y-%m-%d').date()
-            fecha_hoy = timezone.now().date()
-            hora_ahora = timezone.now().time()
+    if date_str:
+        from django.utils import timezone
+        from datetime import datetime
 
-            if fecha_pedida == fecha_hoy:
-                schedules = schedules.filter(start_time__gt=hora_ahora)
-        except ValueError:
-            return Response({'message': 'Formato de fecha inválido. Use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+        fecha = datetime.strptime(date_str, '%Y-%m-%d').date()
+        fecha_hoy = timezone.localtime().date()
+        hora_ahora = timezone.localtime().time()
 
-    if date:
-        reserved = Reservation.objects.filter(
+        reservados = Reservation.objects.filter(
             schedule__court=court,
-            date=date,
+            date=fecha,
             status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
         ).values_list('schedule_id', flat=True)
 
         data = []
         for schedule in schedules:
             s = BaseScheduleSerializer(schedule).data
-            s['occupied'] = schedule.id in reserved
+            s['occupied'] = schedule.id in reservados
+
+            if fecha == fecha_hoy:
+                s['passed'] = schedule.end_time <= hora_ahora
+            else:
+                s['passed'] = fecha < fecha_hoy
+
             data.append(s)
 
         return Response({'schedules': data}, status=status.HTTP_200_OK)
@@ -213,7 +212,7 @@ def list_schedules(request, court_id):
 
 def actualizar_reservas_completadas(reservations_qs):
     """Marca como completed las reservas cuya hora final ya pasó."""
-    ahora = timezone.now()
+    ahora = timezone.localtime()
     fecha_hoy = ahora.date()
     hora_ahora = ahora.time()
 
