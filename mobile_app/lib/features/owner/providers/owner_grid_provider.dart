@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_app/core/constants/app_constants.dart';
-import 'package:mobile_app/features/auth/screens/owner_grid_tab.dart';
-
+import 'package:mobile_app/features/owner/screens/owner_grid_tab.dart';
 
 class OwnerGridProvider extends ChangeNotifier {
   List<GridRow> grilla = [];
+  List<String> courtNames = [];
   bool isLoading = true;
   String? errorMessage;
   DateTime selectedDate = DateTime.now();
@@ -35,10 +35,22 @@ class OwnerGridProvider extends ChangeNotifier {
       }
 
       final facilityData = json.decode(facilityRes.body);
-      final courts =
-          List<Map<String, dynamic>>.from(facilityData['courts']);
+      final courts = List<Map<String, dynamic>>.from(facilityData['courts']);
 
-      // Requests en paralelo — uno por cancha
+      if (courts.isEmpty) {
+        grilla = [];
+        courtNames = [];
+        isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      courtNames = courts
+          .asMap()
+          .entries
+          .map((e) => 'Cancha ${e.key + 1} · ${e.value['team_size']}')
+          .toList();
+
       final schedulesResponses = await Future.wait(
         courts.map((court) => http.get(
               Uri.parse(
@@ -47,8 +59,7 @@ class OwnerGridProvider extends ChangeNotifier {
             )),
       );
 
-      // Mapa: startTime → { courtId → GridCell }
-      final Map<String, Map<int, GridCell>> grillaMap = {};
+      final Map<String, List<GridCell?>> grillaMap = {};
 
       for (int i = 0; i < courts.length; i++) {
         final court = courts[i];
@@ -58,19 +69,17 @@ class OwnerGridProvider extends ChangeNotifier {
         final schedules = List<Map<String, dynamic>>.from(
             json.decode(res.body)['schedules']);
 
-        for (final schedule in schedules) {
-          final startTime = schedule['start_time'] as String;
-          final endTime = schedule['end_time'] as String;
+        for (final s in schedules) {
+          final key = s['start_time'] as String;
+          grillaMap.putIfAbsent(key, () => List.filled(courts.length, null));
 
-          grillaMap.putIfAbsent(startTime, () => {});
-          grillaMap[startTime]![court['id']] = GridCell(
+          grillaMap[key]![i] = GridCell(
             courtId: court['id'],
-            courtName: 'Cancha ${i + 1} - ${court['team_size']}',
-            startTime: startTime.substring(0, 5),
-            endTime: endTime.substring(0, 5),
-            available: court['available'],
-            occupied: schedule['occupied'] ?? false,
-            playerLabel: '',
+            startTime: (s['start_time'] as String).substring(0, 5),
+            endTime: (s['end_time'] as String).substring(0, 5),
+            available: court['available'] as bool,
+            occupied: s['occupied'] as bool? ?? false,
+            passed: s['passed'] as bool? ?? false,
           );
         }
       }
@@ -78,21 +87,23 @@ class OwnerGridProvider extends ChangeNotifier {
       final sortedKeys = grillaMap.keys.toList()..sort();
 
       grilla = sortedKeys.map((key) {
-        final cells = courts.map((court) {
-          return grillaMap[key]![court['id']] ??
+        final cells = List<GridCell>.generate(courts.length, (i) {
+          return grillaMap[key]![i] ??
               GridCell(
-                courtId: court['id'],
-                courtName: court['team_size'],
+                courtId: courts[i]['id'],
                 startTime: key.substring(0, 5),
                 endTime: '',
-                available: court['available'],
+                available: courts[i]['available'] as bool,
                 occupied: false,
-                playerLabel: '',
+                passed: false,
               );
-        }).toList();
+        });
+
+        final startDisplay = key.substring(0, 5);
+        final endDisplay = cells.first.endTime;
 
         return GridRow(
-          hora: '${key.substring(0, 5)} - ${cells.first.endTime}',
+          hora: '$startDisplay - $endDisplay',
           cells: cells,
         );
       }).toList();

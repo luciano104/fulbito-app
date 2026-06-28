@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/auth/providers/user_provider.dart';
 import 'core/constants/app_constants.dart';
 //SCREENS
 import 'package:mobile_app/features/auth/screens/login_screen.dart';
@@ -30,6 +31,7 @@ class CanchasSaltaApp extends StatelessWidget {
       providers: [
         // Auth
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
         // Jugador
         ChangeNotifierProvider(create: (_) => CanchasProvider()),
         ChangeNotifierProvider(create: (_) => ReservasProvider()),

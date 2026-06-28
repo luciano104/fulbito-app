@@ -61,6 +61,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
   Widget build(BuildContext context) {
     
     final reservasProvider = Provider.of<ReservasProvider>(context);
+    final reservasActivas = reservasProvider.misReservas.where((r) => r.estado != 'completed').toList();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -90,12 +91,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
           Expanded(
             child: reservasProvider.isLoading 
               ? const Center(child: CircularProgressIndicator(color: Colors.green))
-              : reservasProvider.misReservas.isEmpty 
+              : reservasActivas.isEmpty 
               ? const Center(child: Text("No tenés reservas activas", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16)))
               : ListView.builder(
-                  itemCount: reservasProvider.misReservas.length,
+                  itemCount: reservasActivas.length,
                   itemBuilder: (context, index) {
-                    final reserva = reservasProvider.misReservas[index];
+                    final reserva = reservasActivas[index];
                     
                     return Card(
                       elevation: 4,

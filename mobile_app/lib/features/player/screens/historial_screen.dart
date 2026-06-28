@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 import 'package:mobile_app/features/player/providers/reservas_provider.dart';
-import 'package:mobile_app/features/player/screens/booking_screen.dart'; 
 
 class HistorialScreen extends StatefulWidget {
   const HistorialScreen({super.key});

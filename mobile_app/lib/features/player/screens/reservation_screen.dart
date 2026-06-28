@@ -244,7 +244,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ),
                             onPressed: _selectedScheduleId == null ? null : _confirmarReservaReal,
                             child: Text(
-                              _selectedScheduleId == null ? 'Seleccioná un horario' : 'RESERVAR $_selectedTimeLabel專HS',
+                              _selectedScheduleId == null ? 'Seleccioná un horario' : 'RESERVAR $_selectedTimeLabel HS',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),

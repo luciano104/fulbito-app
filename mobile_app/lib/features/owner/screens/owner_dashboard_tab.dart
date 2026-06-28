@@ -64,6 +64,17 @@ class OwnerDashboardTab extends StatefulWidget {
   State<OwnerDashboardTab> createState() => _OwnerDashboardTabState();
 }
 
+String superficie(surface){
+  switch (surface){
+    case 'grass': return 'Pasto Natural';
+    case 'turf': return 'Pasto Sintético';
+    case 'cement': return 'Cemento';
+    case 'dirt': return 'Tierra';
+    default: return '';
+    
+  }
+}
+
 class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
   @override
   void initState(){
@@ -164,7 +175,7 @@ class _OwnerDashboardTabState extends State<OwnerDashboardTab> {
           ...provider.courts.map((court) => Card(
             margin: const EdgeInsets.symmetric(vertical: 6),
             child: SwitchListTile(
-              title: Text('${court.teamSize} - ${court.surface}', style: const TextStyle(fontWeight: FontWeight.w500),),
+              title: Text('${court.teamSize} - ${superficie(court.surface)}', style: const TextStyle(fontWeight: FontWeight.w500),),
               subtitle: Text(court.available ? 'Disponible para turnos': 'Pausada por Mantenimiento', style: TextStyle(color: court.available ? Colors.green : Colors.red, fontSize: 13),),
               value: court.available,
               activeColor: Colors.green,

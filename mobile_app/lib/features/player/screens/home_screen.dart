@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/player/screens/player_profile_screen.dart';
 import 'package:provider/provider.dart'; 
 import './../providers/canchas_provider.dart'; 
 import 'reservation_screen.dart'; 
@@ -74,7 +75,7 @@ class _InicioTabState extends State<InicioTab> {
                   iconSize: 32,
                   icon: const Icon(Icons.person, color: Colors.green),
                   tooltip: 'Perfil',
-                  onPressed: () => print('Clic en Perfil'),
+                  onPressed: () => Navigator.push(context,MaterialPageRoute(builder: (_) => const PlayerProfileScreen()),)
                 ),
                 const Text(
                   'Hola Jugador',

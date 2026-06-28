@@ -82,7 +82,6 @@ class BaseScheduleSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'court',
-            'weekday',
             'start_time',
             'end_time',
         ]

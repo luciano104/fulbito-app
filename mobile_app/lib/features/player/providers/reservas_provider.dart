@@ -15,7 +15,7 @@ class ReservasProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/schedules/$courtId/?date=$fechaFormateada');
+      final url = Uri.parse('${ApiConstants.baseUrl}/courts/$courtId/schedules');
 
       final response = await http.get(
         url,
@@ -39,7 +39,7 @@ class ReservasProvider extends ChangeNotifier {
 
   Future<bool> solicitarReserva(String token, String scheduleId, String fechaFormateada) async {
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/reservations/');
+      final url = Uri.parse('${ApiConstants.baseUrl}/reservations/create/');
 
       final response = await http.post(
         url,
@@ -87,8 +87,7 @@ class ReservasProvider extends ChangeNotifier {
   }
   Future<bool> enviarResena(String token, String reservaId, int rating, String comentario) async {
     try {
-      // ATENCIÓN: Verificá con tu compañero si esta es la URL exacta en urls.py
-      final url = Uri.parse('${ApiConstants.baseUrl}/reviews/'); 
+      final url = Uri.parse('${ApiConstants.baseUrl}/reviews/create/'); 
 
       final response = await http.post(
         url,
