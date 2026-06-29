@@ -121,18 +121,6 @@ Screen  →  Provider  →  Service  →  ApiClient  →  Django REST API
 | Super Admin | Modera la plataforma desde el panel Django |
 
 ---
-
-## Estado del proyecto
-
-- [x] Estructura base del proyecto
-- [x] Configuración de Django + Django REST Framework
-- [ ] Modelos y migraciones (users, complejos, reservas, reseñas)
-- [ ] Endpoints de autenticación (registro, login, token)
-- [ ] Flujo jugador en Flutter
-- [ ] Flujo dueño en Flutter
-- [ ] Integración Flutter ↔ Django
-
----
 ```
 ## 📸 Capturas de Pantalla
 
