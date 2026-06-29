@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_app/features/player/screens/player_profile_screen.dart';
+import 'package:mobile_app/features/auth/screens/profile_screen.dart';
 import 'booking_screen.dart';
 import 'home_screen.dart';
 import 'canchas_map_screen.dart';
@@ -20,7 +20,7 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
     const InicioTab(),
     const BookingsScreen(),
     const CanchasMapScreen(),
-    const PlayerProfileScreen(),
+    const ProfileScreen(),
     
   ];
 

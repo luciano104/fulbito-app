@@ -4,17 +4,18 @@ import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 import 'package:mobile_app/features/auth/providers/user_provider.dart';
 import 'package:mobile_app/features/auth/screens/login_screen.dart';
 
-class PlayerProfileScreen extends StatefulWidget {
-  const PlayerProfileScreen({super.key});
-
+class ProfileScreen extends StatefulWidget {
+  final VoidCallback? onBack;
+  const ProfileScreen({super.key, this.onBack});
   @override
-  State<PlayerProfileScreen> createState() => _PlayerProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _lastnameController;
+  late TextEditingController _phoneController;
   bool _editando = false;
 
   @override
@@ -23,12 +24,14 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     final user = context.read<AuthProvider>().user!;
     _nameController = TextEditingController(text: user.name);
     _lastnameController = TextEditingController(text: user.lastname);
+    _phoneController = TextEditingController(text: user.phone ?? '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _lastnameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -43,6 +46,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         authProvider: authProvider,
         name: _nameController.text.trim(),
         lastname: _lastnameController.text.trim(),
+        phone: _phoneController.text.trim(),
       );
 
       if (!mounted) return;
@@ -104,11 +108,16 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
+        leading: widget.onBack != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              )
+            : null,
         actions: [
           if (!_editando)
             IconButton(
               icon: const Icon(Icons.edit),
-              tooltip: 'Editar perfil',
               onPressed: () => setState(() => _editando = true),
             ),
         ],
@@ -186,6 +195,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                   const SizedBox(height: 16),
 
                   TextFormField(
+                    controller: _phoneController,
                     enabled: _editando,
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
@@ -207,6 +217,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                             // Restaura los valores originales
                             _nameController.text = user.name;
                             _lastnameController.text = user.lastname;
+                            _phoneController.text = user.phone ?? '';
                             setState(() => _editando = false);
                           },
                           style: OutlinedButton.styleFrom(
