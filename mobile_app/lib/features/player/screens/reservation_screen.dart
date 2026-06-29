@@ -32,14 +32,18 @@ class _ReservationScreenState extends State<ReservationScreen> {
     super.initState();
     Future.microtask(() async {
       final canchasProv = context.read<CanchasProvider>();
-     
       await canchasProv.cargarDetallesDelComplejo(widget.token, widget.facilityId);
-      
+
       if (canchasProv.canchasDelComplejo.isNotEmpty) {
-        setState(() {
-          _selectedCourtId = canchasProv.canchasDelComplejo.first['id'].toString();
-        });
-        _consultarHorariosBackend();
+        final primerCourtId = canchasProv.canchasDelComplejo.first['id'].toString();
+        
+        // ← guardamos el ID para que _consultarHorariosBackend lo use
+        setState(() => _selectedCourtId = primerCourtId);
+        
+        final fechaStr = _formatearFecha(_selectedDate);
+        context.read<ReservasProvider>().cargarHorariosDeCancha(
+          widget.token, primerCourtId, fechaStr,
+        );
       }
     });
   }
@@ -66,24 +70,34 @@ class _ReservationScreenState extends State<ReservationScreen> {
   }
 
   Future<void> _confirmarReservaReal() async {
-    if (_selectedScheduleId == null) return;
-    
+    if (_selectedTimeLabel == null) return;
+
     final reservasProv = context.read<ReservasProvider>();
     final fechaStr = _formatearFecha(_selectedDate);
 
-    
-    final exito = await reservasProv.solicitarReserva(widget.token, _selectedScheduleId!, fechaStr);
+    final exito = await reservasProv.solicitarReserva(
+      widget.token,
+      widget.facilityId,
+      _selectedTimeLabel!,
+      fechaStr,
+    );
 
     if (!mounted) return;
 
     if (exito) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Reserva registrada para las $_selectedTimeLabel hs!'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text('¡Reserva registrada para las $_selectedTimeLabel hs!'),
+          backgroundColor: Colors.green,
+        ),
       );
-      Navigator.pop(context); 
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hubo un problema al procesar la reserva.'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('No hay canchas disponibles para ese horario.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -119,27 +133,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       children: [
                         const Text('Seleccioná la cancha:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: _selectedCourtId,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          ),
-                          items: canchasProvider.canchasDelComplejo.map((cancha) {
-                            return DropdownMenuItem<String>(
-                              value: cancha['id'].toString(),
-                              child: Text(cancha['name'] ?? 'Cancha sin nombre'),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedCourtId = value;
-                              _selectedScheduleId = null;
-                              _selectedTimeLabel = null;
-                            });
-                            _consultarHorariosBackend();
-                          },
-                        ),
                         const SizedBox(height: 24),
                         const Text('¿Qué día querés jugar?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),

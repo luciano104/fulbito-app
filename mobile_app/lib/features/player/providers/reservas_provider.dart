@@ -15,14 +15,10 @@ class ReservasProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/courts/$courtId/schedules');
-
+      final url = Uri.parse('${ApiConstants.baseUrl}/courts/$courtId/schedules/?date=$fechaFormateada');
       final response = await http.get(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token, 
-        },
+        headers: {'Authorization': token},
       );
 
       if (response.statusCode == 200) {
@@ -37,26 +33,21 @@ class ReservasProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> solicitarReserva(String token, String scheduleId, String fechaFormateada) async {
+  Future<bool> solicitarReserva(String token, String facilityId, String startTime, String fecha) async {
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/reservations/create/');
-
       final response = await http.post(
-        url,
+        Uri.parse('${ApiConstants.baseUrl}/reservations/create/'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token, 
+          'Authorization': token,
         },
         body: jsonEncode({
-          'schedule': scheduleId,
-          'date': fechaFormateada,
+          'facility_id': int.parse(facilityId),
+          'start_time': '$startTime:00',
+          'date': fecha,
         }),
       );
-
-      if (response.statusCode == 201) {
-        return true;
-      }
-      return false;
+      return response.statusCode == 201;
     } catch (e) {
       print('Error al solicitar reserva: $e');
       return false;
