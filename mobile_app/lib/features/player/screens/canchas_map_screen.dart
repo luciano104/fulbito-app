@@ -114,25 +114,24 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
                       }), // <-- Ojo que le saqué el .toList() acá para que funcione con los 3 puntos (...)
 
                       // 5. AGREGAMOS TU PIN AZUL (Si ya tenemos la ubicación)
-                      if (_miUbicacionActual != null)
-                        Marker(
-                          point: _miUbicacionActual!,
-                          width: 50,
-                          height: 50,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.my_location,
-                                color: Colors.blueAccent,
-                                size: 30,
-                              ),
+                      Marker(
+                        point: _miUbicacionActual,
+                        width: 50,
+                        height: 50,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.my_location,
+                              color: Colors.blueAccent,
+                              size: 30,
                             ),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ],

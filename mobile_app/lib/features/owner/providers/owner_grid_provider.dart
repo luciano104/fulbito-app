@@ -7,6 +7,7 @@ import 'package:mobile_app/features/owner/screens/owner_grid_tab.dart';
 class OwnerGridProvider extends ChangeNotifier {
   List<GridRow> grilla = [];
   List<String> courtNames = [];
+  List<Map<String, dynamic>> rawCourts = [];
   bool isLoading = true;
   String? errorMessage;
   DateTime selectedDate = DateTime.now();
@@ -35,9 +36,9 @@ class OwnerGridProvider extends ChangeNotifier {
       }
 
       final facilityData = json.decode(facilityRes.body);
-      final courts = List<Map<String, dynamic>>.from(facilityData['courts']);
+      rawCourts = List<Map<String, dynamic>>.from(facilityData['courts']);
 
-      if (courts.isEmpty) {
+      if (rawCourts.isEmpty) {
         grilla = [];
         courtNames = [];
         isLoading = false;
@@ -45,14 +46,14 @@ class OwnerGridProvider extends ChangeNotifier {
         return;
       }
 
-      courtNames = courts
+      courtNames = rawCourts
           .asMap()
           .entries
           .map((e) => 'Cancha ${e.key + 1} · ${e.value['team_size']}')
           .toList();
 
       final schedulesResponses = await Future.wait(
-        courts.map((court) => http.get(
+        rawCourts.map((court) => http.get(
               Uri.parse('${ApiConstants.baseUrl}/courts/${court['id']}/schedules/?date=$_dateStr&show_all=true'),
               headers: {'Authorization': token},
             )),
@@ -60,8 +61,8 @@ class OwnerGridProvider extends ChangeNotifier {
 
       final Map<String, List<GridCell?>> grillaMap = {};
 
-      for (int i = 0; i < courts.length; i++) {
-        final court = courts[i];
+      for (int i = 0; i < rawCourts.length; i++) {
+        final court = rawCourts[i];
         final res = schedulesResponses[i];
         if (res.statusCode != 200) continue;
 
@@ -70,9 +71,10 @@ class OwnerGridProvider extends ChangeNotifier {
 
         for (final s in schedules) {
           final key = s['start_time'] as String;
-          grillaMap.putIfAbsent(key, () => List.filled(courts.length, null));
+          grillaMap.putIfAbsent(key, () => List.filled(rawCourts.length, null));
 
           grillaMap[key]![i] = GridCell(
+            scheduleId: s['id'],
             courtId: court['id'],
             startTime: (s['start_time'] as String).substring(0, 5),
             endTime: (s['end_time'] as String).substring(0, 5),
@@ -86,23 +88,22 @@ class OwnerGridProvider extends ChangeNotifier {
       final sortedKeys = grillaMap.keys.toList()..sort();
 
       grilla = sortedKeys.map((key) {
-        final cells = List<GridCell>.generate(courts.length, (i) {
+        final cells = List<GridCell>.generate(rawCourts.length, (i) {
           return grillaMap[key]![i] ??
               GridCell(
-                courtId: courts[i]['id'],
+                courtId: rawCourts[i]['id'],
                 startTime: key.substring(0, 5),
                 endTime: '',
-                available: courts[i]['available'] as bool,
+                available: rawCourts[i]['available'] as bool,
                 occupied: false,
                 passed: false,
               );
         });
 
         final startDisplay = key.substring(0, 5);
-        final endDisplay = cells.first.endTime;
 
         return GridRow(
-          hora: '$startDisplay',
+          hora: startDisplay,
           cells: cells,
         );
       }).toList();
@@ -119,5 +120,113 @@ class OwnerGridProvider extends ChangeNotifier {
       String token, int facilityId, DateTime nuevaFecha) async {
     selectedDate = nuevaFecha;
     await cargarGrilla(token, facilityId);
+  }
+
+  Future<bool> agregarCancha(String token, int facilityId, String teamSize, String surface, double price) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/facilities/$facilityId/courts/create/'),
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'team_size': teamSize,
+          'surface': surface,
+          'price': price,
+          'available': true,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        await cargarGrilla(token, facilityId);
+        return true;
+      }
+    } catch (e) {
+      print('Error al agregar cancha: $e');
+    }
+    return false;
+  }
+
+  Future<bool> agregarHorarioGlobal(String token, int facilityId, String startTime, String endTime) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/facilities/$facilityId/schedules/add/'),
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'start_time': startTime,
+          'end_time': endTime,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        await cargarGrilla(token, facilityId);
+        return true;
+      }
+    } catch (e) {
+      print('Error al agregar horario global: $e');
+    }
+    return false;
+  }
+
+  Future<bool> editarCancha(String token, int facilityId, int courtId, Map<String, dynamic> datos) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('${ApiConstants.baseUrl}/courts/$courtId/update/'),
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(datos),
+      );
+
+      if (response.statusCode == 200) {
+        await cargarGrilla(token, facilityId);
+        return true;
+      }
+    } catch (e) {
+      print('Error al editar cancha: $e');
+    }
+    return false;
+  }
+  Future<bool> eliminarCancha(String token, int facilityId, int courtId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.baseUrl}/courts/$courtId/delete/'),
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        await cargarGrilla(token, facilityId);
+        return true;
+      }
+    } catch (e) {
+      print('Error al eliminar cancha: $e');
+    }
+    return false;
+  }
+  
+  Future<String?> eliminarHorario(String token, int facilityId, int scheduleId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.baseUrl}/schedules/$scheduleId/delete/'),
+        headers: {'Authorization': token},
+      );
+
+      if (response.statusCode == 204) {
+        await cargarGrilla(token, facilityId);
+        return null;
+      } else {
+        final data = json.decode(response.body);
+        return data['message'] ?? 'Error al eliminar el horario';
+      }
+    } catch (e) {
+      return 'Error de conexión: $e';
+    }
   }
 }
