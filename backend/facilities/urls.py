@@ -8,6 +8,7 @@ urlpatterns = [
     path('facilities/create/', views.create_facility),
     path('facilities/<int:id>/', views.get_facility_details),
     path('facilities/<int:id>/update/', views.update_facility),
+    path('facilities/<int:facility_id>/dashboard/', views.dashboard_stats),
 
     # Canchas
     path('facilities/<int:facility_id>/courts/create/', views.create_court),

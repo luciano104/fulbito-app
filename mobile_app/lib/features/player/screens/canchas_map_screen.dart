@@ -18,8 +18,8 @@ class CanchasMapScreen extends StatefulWidget {
 class _CanchasMapScreenState extends State<CanchasMapScreen> {
   final MapController mapController = MapController();
   
-  // 1. VARIABLE PARA GUARDAR TU UBICACIÓN
-  LatLng? _miUbicacionActual;
+  // 1. VARIABLE PARA GUARDAR UBICACIÓN ACTUAL
+  LatLng _miUbicacionActual = const LatLng(-24.7829, -65.4232);
 
   // 2. INIT STATE PARA PEDIR LA UBICACIÓN AL ABRIR EL MAPA
   @override
@@ -49,6 +49,7 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
       setState(() {
         _miUbicacionActual = LatLng(position.latitude, position.longitude);
       });
+      mapController.move(_miUbicacionActual, 13.5);
     }
   }
 
@@ -85,12 +86,12 @@ class _CanchasMapScreenState extends State<CanchasMapScreen> {
               FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
-                  initialCenter: const LatLng(-24.7829, -65.4232), // Centro de Salta
+                  initialCenter: _miUbicacionActual,
                   initialZoom: 13.5,
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                    urlTemplate: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                     userAgentPackageName: 'com.fulbito.app',
                   ),
                   MarkerLayer(

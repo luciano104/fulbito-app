@@ -91,9 +91,6 @@ class BaseScheduleSerializer(serializers.ModelSerializer):
 # ─────────────────────────────────────────────
 
 class ReservationSerializer(serializers.ModelSerializer):
-
-    # Campos de solo lectura que se agregan para que Flutter
-    # tenga contexto sin hacer consultas extra
     facility_name = serializers.CharField(
         source='schedule.court.facility.name',
         read_only=True

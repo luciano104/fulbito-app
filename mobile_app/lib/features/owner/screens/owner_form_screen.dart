@@ -99,6 +99,7 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
           name: authProvider.user!.name,
           lastname: authProvider.user!.lastname,
           email: authProvider.user!.email,
+          phone: authProvider.user!.phone,
           role: authProvider.user!.role,
           facilityId: facilityId,
         );

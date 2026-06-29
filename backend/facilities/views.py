@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .models import Facility, Court, BaseSchedule, Reservation, Review, Favorite
 from .serializers import (
@@ -102,6 +102,45 @@ def update_facility(request, id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request, facility_id):
+    """Estadísticas del día para el panel del dueño."""
+    try:
+        facility = Facility.objects.get(id=facility_id)
+    except Facility.DoesNotExist:
+        return Response({'message': 'Complejo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    if facility.admin.id != request.user.id:
+        return Response({'message': 'No tenés permiso'}, status=status.HTTP_403_FORBIDDEN)
+
+    from django.utils import timezone
+    fecha_hoy = timezone.localtime().date()
+    reservas_hoy = Reservation.objects.filter(
+        schedule__court__facility=facility,
+        date=fecha_hoy,
+        status__in=[Reservation.STATUS_CONFIRMED, Reservation.STATUS_COMPLETED]
+    )
+
+    turnos_hoy = reservas_hoy.count()
+    ingresos = sum(
+        r.schedule.court.price for r in reservas_hoy
+    )
+    total_slots = BaseSchedule.objects.filter(
+        court__facility=facility,
+        court__available=True
+    ).count()
+
+    ocupacion = round((turnos_hoy / total_slots * 100), 1) if total_slots > 0 else 0.0
+
+    return Response({
+        'turnos_hoy': turnos_hoy,
+        'ingresos_estimados': float(ingresos),
+        'porcentaje_ocupacion': ocupacion,
+        'avg_rating': facility.avg_rating,
+        'total_reviews': facility.total_reviews,
+    }, status=status.HTTP_200_OK)
+
 # ─────────────────────────────────────────────
 #  CANCHAS
 # ─────────────────────────────────────────────
@@ -165,6 +204,7 @@ def create_schedule(request, court_id):
 @permission_classes([IsAuthenticated])
 def list_schedules(request, court_id):
     date_str = request.query_params.get('date')
+    show_all = request.query_params.get('show_all', 'false').lower() == 'true'
 
     try:
         court = Court.objects.get(id=court_id)
@@ -174,9 +214,6 @@ def list_schedules(request, court_id):
     schedules = BaseSchedule.objects.filter(court=court).order_by('start_time')
 
     if date_str:
-        from django.utils import timezone
-        from datetime import datetime
-
         fecha = datetime.strptime(date_str, '%Y-%m-%d').date()
         fecha_hoy = timezone.localtime().date()
         hora_ahora = timezone.localtime().time()
@@ -184,19 +221,21 @@ def list_schedules(request, court_id):
         reservados = Reservation.objects.filter(
             schedule__court=court,
             date=fecha,
-            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED, Reservation.STATUS_COMPLETED]
         ).values_list('schedule_id', flat=True)
+
+        if not show_all and fecha == fecha_hoy:
+            limite = (datetime.combine(fecha_hoy, hora_ahora) + timedelta(minutes=15)).time()
+            schedules = schedules.filter(start_time__gt=limite)
 
         data = []
         for schedule in schedules:
             s = BaseScheduleSerializer(schedule).data
             s['occupied'] = schedule.id in reservados
-
             if fecha == fecha_hoy:
                 s['passed'] = schedule.end_time <= hora_ahora
             else:
                 s['passed'] = fecha < fecha_hoy
-
             data.append(s)
 
         return Response({'schedules': data}, status=status.HTTP_200_OK)
@@ -205,7 +244,6 @@ def list_schedules(request, court_id):
         {'schedules': BaseScheduleSerializer(schedules, many=True).data},
         status=status.HTTP_200_OK
     )
-
 # ─────────────────────────────────────────────
 #  RESERVAS
 # ─────────────────────────────────────────────
@@ -226,12 +264,42 @@ def actualizar_reservas_completadas(reservations_qs):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_reservation(request):
-    """El jugador solicita una reserva."""
-    serializer = ReservationSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(player=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    facility_id = request.data.get('facility_id')
+    date = request.data.get('date')
+    start_time = request.data.get('start_time')
+
+    try:
+        facility = Facility.objects.get(id=facility_id)
+    except Facility.DoesNotExist:
+        return Response({'message': 'Complejo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    courts = Court.objects.filter(facility=facility, available=True)
+
+    for court in courts:
+        try:
+            schedule = BaseSchedule.objects.get(court=court, start_time=start_time)
+        except BaseSchedule.DoesNotExist:
+            continue
+        already_reserved = Reservation.objects.filter(
+            schedule=schedule,
+            date=date,
+            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+        ).exists()
+
+        if not already_reserved:
+            reservation = Reservation.objects.create(
+                schedule=schedule,
+                player=request.user,
+                date=date,
+                status=Reservation.STATUS_PENDING
+            )
+            serializer = ReservationSerializer(reservation)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(
+        {'message': 'No hay canchas disponibles para ese horario'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 @api_view(['GET'])
@@ -303,7 +371,7 @@ def create_review(request):
         # Recalcular el promedio del complejo
         facility = review.reservation.schedule.court.facility
         reviews = Review.objects.filter(
-            review__schedule__court__facility=facility
+            reservation__schedule__court__facility=facility
         )
         total = reviews.count()
         avg = sum(r.rating for r in reviews) / total

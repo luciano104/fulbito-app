@@ -12,6 +12,7 @@ class UserProvider extends ChangeNotifier {
     required AuthProvider authProvider,
     required String name,
     required String lastname,
+    required String phone,
   }) async {
     try {
       isLoading = true;
@@ -23,6 +24,7 @@ class UserProvider extends ChangeNotifier {
         token: authProvider.token!,
         name: name,
         lastname: lastname,
+        phone: phone,
       );
 
       // Actualizamos el usuario en el AuthProvider con los datos frescos del backend
@@ -31,6 +33,7 @@ class UserProvider extends ChangeNotifier {
         name: response['user']['name'],
         lastname: response['user']['lastname'],
         email: response['user']['email'],
+        phone: response['user']['phone'],
         role: response['user']['role'],
         facilityId: response['user']['facility_id'],
       );

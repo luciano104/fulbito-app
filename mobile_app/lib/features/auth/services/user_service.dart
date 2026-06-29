@@ -8,6 +8,7 @@ class UserService {
     required String token,
     required String name,
     required String lastname,
+    required String phone,
   }) async {
     final response = await http.patch(
       Uri.parse('${ApiConstants.baseUrl}/user/$userId/update/'),
@@ -18,6 +19,7 @@ class UserService {
       body: json.encode({
         'name': name,
         'lastname': lastname,
+        'phone': phone,
       }),
     );
 
