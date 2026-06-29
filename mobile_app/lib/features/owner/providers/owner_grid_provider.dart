@@ -53,8 +53,7 @@ class OwnerGridProvider extends ChangeNotifier {
 
       final schedulesResponses = await Future.wait(
         courts.map((court) => http.get(
-              Uri.parse(
-                  '${ApiConstants.baseUrl}/courts/${court['id']}/schedules/?date=$_dateStr'),
+              Uri.parse('${ApiConstants.baseUrl}/courts/${court['id']}/schedules/?date=$_dateStr&show_all=true'),
               headers: {'Authorization': token},
             )),
       );
@@ -103,7 +102,7 @@ class OwnerGridProvider extends ChangeNotifier {
         final endDisplay = cells.first.endTime;
 
         return GridRow(
-          hora: '$startDisplay - $endDisplay',
+          hora: '$startDisplay',
           cells: cells,
         );
       }).toList();

@@ -101,6 +101,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
       );
     }
   }
+  String superficie(surface){
+    switch (surface){
+      case 'grass': return 'Pasto Natural';
+      case 'turf': return 'Pasto Sintético';
+      case 'cement': return 'Cemento';
+      case 'dirt': return 'Tierra';
+      default: return '';
+      
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +143,27 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       children: [
                         const Text('Seleccioná la cancha:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _selectedCourtId,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          ),
+                          items: canchasProvider.canchasDelComplejo.map((cancha) {
+                            return DropdownMenuItem<String>(
+                              value: cancha['id'].toString(),
+                              child: Text('${cancha['team_size']} (${superficie(cancha['surface'])}). Precio: \$${cancha['price']}'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCourtId = value;
+                              _selectedScheduleId = null;
+                              _selectedTimeLabel = null;
+                            });
+                            _consultarHorariosBackend();
+                          },
+                        ),
                         const SizedBox(height: 24),
                         const Text('¿Qué día querés jugar?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),

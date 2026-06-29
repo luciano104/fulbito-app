@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = context.read<AuthProvider>().user!;
     _nameController = TextEditingController(text: user.name);
     _lastnameController = TextEditingController(text: user.lastname);
-    _phoneController = TextEditingController(text: user.phone ?? '');
+    _phoneController = TextEditingController(text: user.phone);
   }
 
   @override
@@ -217,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // Restaura los valores originales
                             _nameController.text = user.name;
                             _lastnameController.text = user.lastname;
-                            _phoneController.text = user.phone ?? '';
+                            _phoneController.text = user.phone;
                             setState(() => _editando = false);
                           },
                           style: OutlinedButton.styleFrom(

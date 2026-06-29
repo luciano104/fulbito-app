@@ -22,46 +22,25 @@ class OwnerDashboardProvider extends ChangeNotifier {
         headers: {'Authorization': token},
       );
 
-      final reservationsRes = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/facilities/$facilityId/reservations/'),
+      final statsRes = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/facilities/$facilityId/dashboard/'),
         headers: {'Authorization': token},
       );
 
-      if (facilityRes.statusCode == 200 && reservationsRes.statusCode == 200) {
+      if (facilityRes.statusCode == 200 && statsRes.statusCode == 200) {
         final facilityData = json.decode(facilityRes.body);
-        final reservationsData = json.decode(reservationsRes.body);
+        final statsData = json.decode(statsRes.body);
 
         courts = (facilityData['courts'] as List)
             .map((c) => CourtStatus.fromJson(c))
             .toList();
 
-        final today = DateTime.now();
-        final todayStr =
-            '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-
-        final allReservations = (reservationsData['reservations'] as List);
-        final confirmedToday = allReservations
-            .where((r) => r['date'] == todayStr && r['status'] == 'confirmed')
-            .toList();
-
-        final totalSlots = courts.length * 12;
-        final ocupacion =
-            totalSlots > 0 ? (confirmedToday.length / totalSlots) * 100 : 0.0;
-
-        double ingresos = 0;
-        for (final _ in confirmedToday) {
-          ingresos += double.tryParse(
-                  facilityData['facility']['base_price'].toString()) ??
-              0;
-        }
-
         stats = DashboardStats(
-          turnosHoy: confirmedToday.length,
-          porcentajeOcupacion: ocupacion.toDouble(),
-          ingresosEstimados: ingresos,
-          avgRating:
-              (facilityData['facility']['avg_rating'] as num).toDouble(),
-          totalReviews: facilityData['facility']['total_reviews'],
+          turnosHoy: statsData['turnos_hoy'],
+          porcentajeOcupacion: (statsData['porcentaje_ocupacion'] as num).toDouble(),
+          ingresosEstimados: (statsData['ingresos_estimados'] as num).toDouble(),
+          avgRating: (statsData['avg_rating'] as num).toDouble(),
+          totalReviews: statsData['total_reviews'],
         );
       } else {
         errorMessage = 'Error al cargar el dashboard';

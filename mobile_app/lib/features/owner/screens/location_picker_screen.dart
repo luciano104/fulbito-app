@@ -61,8 +61,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                urlTemplate: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                 userAgentPackageName: 'com.fulbito.app',
               ),
               MarkerLayer(
@@ -91,13 +90,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.65),
+                color: Colors.white.withOpacity(0.85),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
+              child: Text(
                 'Tocá el mapa para mover el pin a la ubicación de tu complejo',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: Colors.black87, fontSize: 13),
               ),
             ),
           ),

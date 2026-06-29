@@ -25,6 +25,7 @@ class GridCell {
 
   String get estado {
     if (!available) return 'mantenimiento';
+    if (passed && occupied) return 'finalizado_reservado';
     if (passed) return 'finalizado';
     if (occupied) return 'reservado';
     return 'libre';
@@ -38,33 +39,36 @@ class GridRow {
 }
 
 // ─────────────────────────────────────────────
-//  COLORES POR ESTADO
+//  COLORES Y LABELS POR ESTADO
 // ─────────────────────────────────────────────
 
 Color _bgColor(String estado) {
   switch (estado) {
-    case 'reservado':   return Colors.red.shade100;
-    case 'finalizado':  return Colors.grey.shade300;
-    case 'mantenimiento': return Colors.orange.shade100;
-    default:            return Colors.green.shade100;
+    case 'reservado':            return Colors.red.shade100;
+    case 'finalizado_reservado': return Colors.purple.shade100;
+    case 'finalizado':           return Colors.grey.shade300;
+    case 'mantenimiento':        return Colors.orange.shade100;
+    default:                     return Colors.green.shade100;
   }
 }
 
 Color _textColor(String estado) {
   switch (estado) {
-    case 'reservado':   return Colors.red.shade900;
-    case 'finalizado':  return Colors.grey.shade600;
-    case 'mantenimiento': return Colors.orange.shade900;
-    default:            return Colors.green.shade900;
+    case 'reservado':            return Colors.red.shade900;
+    case 'finalizado_reservado': return Colors.purple.shade900;
+    case 'finalizado':           return Colors.grey.shade600;
+    case 'mantenimiento':        return Colors.orange.shade900;
+    default:                     return Colors.green.shade900;
   }
 }
 
 String _estadoLabel(String estado) {
   switch (estado) {
-    case 'reservado':     return 'Reservado';
-    case 'finalizado':    return 'Finalizado';
-    case 'mantenimiento': return 'Mantenim.';
-    default:              return 'Libre';
+    case 'reservado':            return 'Reservado';
+    case 'finalizado_reservado': return 'Completado';
+    case 'finalizado':           return 'Sin reserva';
+    case 'mantenimiento':        return 'Mantenim.';
+    default:                     return 'Libre';
   }
 }
 
@@ -144,13 +148,15 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
 
         // ── LEYENDA ──
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 6,
             children: [
               _leyendaItem(Colors.green.shade100, Colors.green.shade900, 'Libre'),
               _leyendaItem(Colors.red.shade100, Colors.red.shade900, 'Reservado'),
-              _leyendaItem(Colors.grey.shade300, Colors.grey.shade600, 'Finalizado'),
+              _leyendaItem(Colors.purple.shade100, Colors.purple.shade900, 'Completado'),
+              _leyendaItem(Colors.grey.shade300, Colors.grey.shade600, 'Sin reserva'),
               _leyendaItem(Colors.orange.shade100, Colors.orange.shade900, 'Mantenim.'),
             ],
           ),
@@ -184,8 +190,7 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
           // ── HEADER con nombres de canchas ──
           Row(
             children: [
-              // Columna de horas — ancho fijo
-              const SizedBox(width: 72),
+              const SizedBox(width: 40),
               ...provider.courtNames.map((name) => Expanded(
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -215,9 +220,8 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
                   children: [
-                    // Hora a la izquierda
                     SizedBox(
-                      width: 72,
+                      width: 40,
                       child: Text(
                         row.hora,
                         style: const TextStyle(
@@ -227,7 +231,6 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    // Celda por cancha
                     ...row.cells.map((cell) {
                       final estado = cell.estado;
                       return Expanded(
@@ -262,6 +265,7 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
 
   Widget _leyendaItem(Color bg, Color text, String label) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 14,
