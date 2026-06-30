@@ -15,5 +15,5 @@ class AppRoutes {
 
 //URL base
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.100.9:8000/api';
+  static const String baseUrl = 'http://192.168.211.121:8000/api';
 }

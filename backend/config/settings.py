@@ -25,9 +25,10 @@ SECRET_KEY = 'django-insecure-y%pr)_s*e)n^1ou%wbi4gwm5qf4p1q^^wb_(c-1a^a9$)w3tl(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-GLOBAL_IP = '192.168.100.9'
+GLOBAL_IP = '192.168.211.121'
+NGROCK_HOST = 'valuables-theorize-harddisk.ngrok-free.dev'
 GLOBAL_HOST = '8000'
-ALLOWED_HOSTS = [GLOBAL_IP, '127.0.0.1']
+ALLOWED_HOSTS = [GLOBAL_IP, '127.0.0.1', NGROCK_HOST]
 
 
 # Application definition
@@ -147,3 +148,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+NGROK_URL = 'https://valuables-theorize-harddisk.ngrok-free.dev/'
+MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-5668987891866852-063014-8b3b20481b70511aa811912cb29315a7-3508293398'

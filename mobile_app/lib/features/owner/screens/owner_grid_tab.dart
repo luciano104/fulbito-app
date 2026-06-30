@@ -121,8 +121,14 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
   }
   void _dialogoNuevaCancha(OwnerGridProvider provider) {
     String teamSize = 'F5';
-    String surface = 'Sintético';
+    String surface = 'turf';
     final priceController = TextEditingController();
+    const superficies = {
+      'grass': 'Pasto Natural',
+      'turf': 'Pasto Sintético',
+      'concrete': 'Cemento',
+      'dirt': 'Tierra',
+    };
 
     showDialog(
       context: context,
@@ -141,7 +147,10 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
               DropdownButtonFormField<String>(
                 value: surface,
                 decoration: const InputDecoration(labelText: 'Superficie'),
-                items: ['Sintético', 'Parquet', 'Tierra', 'Cemento'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                items: superficies.entries.map((e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value),
+                      )).toList(),
                 onChanged: (val) => surface = val ?? surface,
               ),
               TextField(
@@ -223,9 +232,16 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
   // Dialogo para modificar atributos, dar mantenimiento o eliminar la cancha
   void _dialogoEditarCancha(OwnerGridProvider provider, Map<String, dynamic> court, int index) {
     String teamSize = court['team_size'] ?? 'F5';
-    String surface = court['surface'] ?? 'Sintético';
+    String surface = court['surface'] ?? 'turf';
     bool available = court['available'] ?? true;
     final priceController = TextEditingController(text: court['price'].toString());
+
+    const superficies = {
+      'grass': 'Pasto Natural',
+      'turf': 'Pasto Sintético',
+      'concrete': 'Cemento',
+      'dirt': 'Tierra',
+    };
 
     showDialog(
       context: context,
@@ -245,7 +261,10 @@ class _OwnerGridTabState extends State<OwnerGridTab> {
                 DropdownButtonFormField<String>(
                   value: surface,
                   decoration: const InputDecoration(labelText: 'Superficie'),
-                  items: ['Sintético', 'Natural', 'Tierra', 'Cemento'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                  items: superficies.entries.map((e) => DropdownMenuItem(
+                    value: e.key,
+                    child: Text(e.value),
+                  )).toList(),
                   onChanged: (val) => surface = val ?? surface,
                 ),
                 TextField(

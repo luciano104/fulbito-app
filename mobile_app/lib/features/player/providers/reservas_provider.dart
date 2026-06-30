@@ -33,7 +33,7 @@ class ReservasProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> solicitarReserva(String token, String facilityId, String startTime, String fecha) async {
+  Future<bool> solicitarReserva(String token, String scheduleId, String fecha) async {
     try {
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/reservations/create/'),
@@ -42,8 +42,7 @@ class ReservasProvider extends ChangeNotifier {
           'Authorization': token,
         },
         body: jsonEncode({
-          'facility_id': int.parse(facilityId),
-          'start_time': '$startTime:00',
+          'schedule_id': int.parse(scheduleId),
           'date': fecha,
         }),
       );
@@ -105,7 +104,7 @@ class ReservasProvider extends ChangeNotifier {
   }
   Future<String?> crearPreferenciaPago(String token, String scheduleId, String fechaFormateada) async {
     try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/reservations/create_payment/'); 
+      final url = Uri.parse('${ApiConstants.baseUrl}/payments/create-preference/'); 
 
       final response = await http.post(
         url,
@@ -114,7 +113,7 @@ class ReservasProvider extends ChangeNotifier {
           'Authorization': token, 
         },
         body: jsonEncode({
-          'schedule': scheduleId,
+          'schedule_id': scheduleId,
           'date': fechaFormateada,
         }),
       );

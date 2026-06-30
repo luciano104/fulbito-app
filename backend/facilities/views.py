@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from datetime import datetime, timedelta
+import mercadopago
+from django.conf import settings
 
 from .models import Facility, Court, BaseSchedule, Reservation, Review, Favorite
 from .serializers import (
@@ -388,42 +390,37 @@ def actualizar_reservas_completadas(reservations_qs):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_reservation(request):
-    facility_id = request.data.get('facility_id')
+    schedule_id = request.data.get('schedule_id')
     date = request.data.get('date')
-    start_time = request.data.get('start_time')
+
+    if not schedule_id or not date:
+        return Response({'message': 'schedule_id y date son obligatorios'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        facility = Facility.objects.get(id=facility_id)
-    except Facility.DoesNotExist:
-        return Response({'message': 'Complejo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        schedule = BaseSchedule.objects.get(id=schedule_id)
+    except BaseSchedule.DoesNotExist:
+        return Response({'message': 'Horario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
-    courts = Court.objects.filter(facility=facility, available=True)
+    if not schedule.court.available:
+        return Response({'message': 'Esa cancha no está disponible'}, status=status.HTTP_400_BAD_REQUEST)
 
-    for court in courts:
-        try:
-            schedule = BaseSchedule.objects.get(court=court, start_time=start_time)
-        except BaseSchedule.DoesNotExist:
-            continue
-        already_reserved = Reservation.objects.filter(
-            schedule=schedule,
-            date=date,
-            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
-        ).exists()
+    ya_reservado = Reservation.objects.filter(
+        schedule=schedule,
+        date=date,
+        status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+    ).exists()
 
-        if not already_reserved:
-            reservation = Reservation.objects.create(
-                schedule=schedule,
-                player=request.user,
-                date=date,
-                status=Reservation.STATUS_PENDING
-            )
-            serializer = ReservationSerializer(reservation)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    if ya_reservado:
+        return Response({'message': 'Ese horario ya está reservado'}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(
-        {'message': 'No hay canchas disponibles para ese horario'},
-        status=status.HTTP_400_BAD_REQUEST
+    reservation = Reservation.objects.create(
+        schedule=schedule,
+        player=request.user,
+        date=date,
+        status=Reservation.STATUS_PENDING
     )
+    serializer = ReservationSerializer(reservation)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
@@ -541,3 +538,86 @@ def my_favorites(request):
     facilities = [f.facility for f in favorites]
     serializer = FacilityListSerializer(facilities, many=True)
     return Response({'favorites': serializer.data}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_mp_preference(request):
+    """Crea la reserva en estado pending y arma el link de pago de Mercado Pago."""
+    schedule_id = request.data.get('schedule_id')
+    date = request.data.get('date')
+    if not schedule_id or not date:
+        return Response({'message': 'schedule_id y date son obligatorios'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        schedule = BaseSchedule.objects.get(id=schedule_id)
+    except BaseSchedule.DoesNotExist:
+        return Response({'message': 'Horario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+    ya_reservado = Reservation.objects.filter(
+        schedule=schedule,
+        date=date,
+        status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+    ).exists()
+
+    if ya_reservado:
+        return Response({'message': 'Ese horario ya está reservado'}, status=status.HTTP_400_BAD_REQUEST)
+
+    reservation = Reservation.objects.create(
+        schedule=schedule,
+        player=request.user,
+        date=date,
+        status=Reservation.STATUS_PENDING,
+    )
+
+    precio = schedule.court.price
+    sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+
+    preference_data = {
+        "items": [
+            {
+                "title": f"Reserva {schedule.court.facility.name} - {schedule.start_time}",
+                "quantity": 1,
+                "unit_price": float(precio),
+                "currency_id": "ARS",
+            }
+        ],
+        "external_reference": str(reservation.id),
+        "notification_url": f"{settings.NGROK_URL}/api/payments/webhook/",
+        "back_urls": {
+            "success": "fulbitoapp://payment-success",
+            "failure": "fulbitoapp://payment-failure",
+            "pending": "fulbitoapp://payment-pending",
+        },
+        "auto_return": "approved",
+    }
+
+    preference_response = sdk.preference().create(preference_data)
+    preference = preference_response["response"]
+
+    return Response({
+        'reservation_id': reservation.id,
+        'init_point': preference['init_point'],
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def payment_webhook(request):
+    """Mercado Pago llama acá cuando cambia el estado de un pago."""
+    payment_id = request.data.get('data', {}).get('id')
+    topic = request.data.get('type')
+
+    if topic != 'payment' or not payment_id:
+        return Response(status=status.HTTP_200_OK)
+
+    sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+    payment_info = sdk.payment().get(payment_id)
+    payment = payment_info["response"]
+
+    if payment.get('status') == 'approved':
+        reservation_id = payment.get('external_reference')
+        try:
+            reservation = Reservation.objects.get(id=reservation_id)
+            reservation.status = Reservation.STATUS_CONFIRMED
+            reservation.save()
+        except Reservation.DoesNotExist:
+            pass
+
+    return Response(status=status.HTTP_200_OK)

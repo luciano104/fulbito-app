@@ -144,17 +144,19 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                               decoration: BoxDecoration(
-                                color: reserva.estado == 'confirmed' ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                                color: reserva.estado == 'confirmed' ? Colors.green.withOpacity(0.2) : 
+                                  reserva.estado == 'pending' ? Colors.orange.withOpacity(0.2) : Colors.red.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                reserva.estado == 'confirmed' ? 'CONFIRMADA' : 'PENDIENTE',
+                                reserva.estado == 'confirmed' ? 'CONFIRMADA' : reserva.estado == 'pending' ? 'PENDIENTE': 'CANCELADA',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: reserva.estado == 'confirmed'
                                       ? Colors.green
-                                      : Colors.orange,
+                                      : reserva.estado == 'pending' ?Colors.orange
+                                      : Colors.red,
                                 ),
                               ),
                             )
