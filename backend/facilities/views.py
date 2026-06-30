@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
+from datetime import datetime, timedelta
 
 from .models import Facility, Court, BaseSchedule, Reservation, Review, Favorite
 from .serializers import (
@@ -26,7 +28,30 @@ def create_facility(request):
     """El dueño registra su complejo al registrarse."""
     serializer = FacilitySerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(admin=request.user)
+        facility = serializer.save(admin=request.user)
+
+        #Cancha por defecto
+        court = Court.objects.create(
+            facility = facility,
+            team_size = 'F5',
+            surface=facility.surface_type,
+            price=facility.base_price,
+            available = True,
+        )
+        horarios = [
+            ('16:00:00', '17:00:00'),
+            ('17:00:00', '18:00:00'),
+            ('18:00:00', '19:00:00'),
+            ('19:00:00', '20:00:00'),
+            ('20:00:00', '21:00:00'),
+            ('21:00:00', '22:00:00'),
+        ]
+        for start, end in horarios:
+            BaseSchedule.objects.create(
+                court=court,
+                start_time=start,
+                end_time=end,
+            )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -77,6 +102,45 @@ def update_facility(request, id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request, facility_id):
+    """Estadísticas del día para el panel del dueño."""
+    try:
+        facility = Facility.objects.get(id=facility_id)
+    except Facility.DoesNotExist:
+        return Response({'message': 'Complejo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    if facility.admin.id != request.user.id:
+        return Response({'message': 'No tenés permiso'}, status=status.HTTP_403_FORBIDDEN)
+
+    from django.utils import timezone
+    fecha_hoy = timezone.localtime().date()
+    reservas_hoy = Reservation.objects.filter(
+        schedule__court__facility=facility,
+        date=fecha_hoy,
+        status__in=[Reservation.STATUS_CONFIRMED, Reservation.STATUS_COMPLETED]
+    )
+
+    turnos_hoy = reservas_hoy.count()
+    ingresos = sum(
+        r.schedule.court.price for r in reservas_hoy
+    )
+    total_slots = BaseSchedule.objects.filter(
+        court__facility=facility,
+        court__available=True
+    ).count()
+
+    ocupacion = round((turnos_hoy / total_slots * 100), 1) if total_slots > 0 else 0.0
+
+    return Response({
+        'turnos_hoy': turnos_hoy,
+        'ingresos_estimados': float(ingresos),
+        'porcentaje_ocupacion': ocupacion,
+        'avg_rating': facility.avg_rating,
+        'total_reviews': facility.total_reviews,
+    }, status=status.HTTP_200_OK)
+
 # ─────────────────────────────────────────────
 #  CANCHAS
 # ─────────────────────────────────────────────
@@ -95,7 +159,17 @@ def create_court(request, facility_id):
 
     serializer = CourtSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(facility=facility)
+        court = serializer.save(facility=facility)
+        cancha_referencia = Court.objects.filter(facility=facility).exclude(id=court.id).first()
+        if cancha_referencia:
+            horarios = BaseSchedule.objects.filter(court=cancha_referencia)
+            for horario in horarios:
+                BaseSchedule.objects.create(
+                    court=court,
+                    start_time=horario.start_time,
+                    end_time=horario.end_time,
+                )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,6 +190,50 @@ def toggle_availability(request, court_id):
     court.save()
     return Response({'available': court.available}, status=status.HTTP_200_OK)
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_court(request, court_id):
+    """El dueño edita los atributos de una cancha."""
+    try:
+        court = Court.objects.get(id=court_id)
+    except Court.DoesNotExist:
+        return Response({'message': 'Cancha no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+    if court.facility.admin.id != request.user.id:
+        return Response({'message': 'No tenés permiso'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = CourtSerializer(court, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_court(request, court_id):
+    """El dueño elimina permanentemente una cancha si no tiene reservas futuras."""
+    try:
+        court = Court.objects.get(id=court_id)
+    except Court.DoesNotExist:
+        return Response({'message': 'Cancha no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+    if court.facility.admin.id != request.user.id:
+        return Response({'message': 'No tenés permiso para eliminar esta cancha'}, status=status.HTTP_403_FORBIDDEN)
+    # Validar reservas a futuro (hoy o adelante) activas (PENDIENTES o CONFIRMADAS)
+    fecha_hoy = timezone.localtime().date()
+    tiene_reservas_futuras = Reservation.objects.filter(
+        schedule__court=court,
+        date__gte=fecha_hoy,
+        status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+    ).exists()
+    if tiene_reservas_futuras:
+        return Response(
+            {'message': 'No se puede eliminar la cancha porque tiene reservas activas a futuro. Cancelalas primero.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    court.delete()
+    return Response({'message': 'Cancha eliminada correctamente'}, status=status.HTTP_204_NO_CONTENT)
+
 # ─────────────────────────────────────────────
 #  HORARIOS
 # ─────────────────────────────────────────────
@@ -135,32 +253,84 @@ def create_schedule(request, court_id):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_schedule_all_courts(request, facility_id):
+    """Agrega un horario nuevo a todas las canchas del complejo."""
+    try:
+        facility = Facility.objects.get(id=facility_id)
+    except Facility.DoesNotExist:
+        return Response({'message': 'Complejo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    if facility.admin.id != request.user.id:
+        return Response({'message': 'No tenés permiso'}, status=status.HTTP_403_FORBIDDEN)
+
+    start_time = request.data.get('start_time')
+    end_time = request.data.get('end_time')
+
+    if not start_time or not end_time:
+        return Response({'message': 'start_time y end_time son obligatorios'}, status=status.HTTP_400_BAD_REQUEST)
+
+    courts = Court.objects.filter(facility=facility)
+    creados = []
+    errores = []
+
+    for court in courts:
+        if BaseSchedule.objects.filter(court=court, start_time=start_time).exists():
+            errores.append(f'Cancha {court.id}: ya tiene ese horario')
+            continue
+        schedule = BaseSchedule.objects.create(
+            court=court,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        creados.append(BaseScheduleSerializer(schedule).data)
+    if errores and not creados:
+        return Response({
+            'message': 'El horario ya se encuentra cargado en todas las canchas.',
+            'errores': errores
+        }, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'creados': creados,
+        'errores': errores,
+    }, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_schedules(request, court_id):
-    """Lista los horarios disponibles de una cancha para una fecha dada."""
-    date = request.query_params.get('date')
+    date_str = request.query_params.get('date')
+    show_all = request.query_params.get('show_all', 'false').lower() == 'true'
 
     try:
         court = Court.objects.get(id=court_id)
     except Court.DoesNotExist:
         return Response({'message': 'Cancha no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
-    schedules = BaseSchedule.objects.filter(court=court)
+    schedules = BaseSchedule.objects.filter(court=court).order_by('start_time')
 
-    # Si se pasa una fecha, marcamos cuáles ya están reservados
-    if date:
-        reserved = Reservation.objects.filter(
+    if date_str:
+        fecha = datetime.strptime(date_str, '%Y-%m-%d').date()
+        fecha_hoy = timezone.localtime().date()
+        hora_ahora = timezone.localtime().time()
+
+        reservados = Reservation.objects.filter(
             schedule__court=court,
-            date=date,
-            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+            date=fecha,
+            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED, Reservation.STATUS_COMPLETED]
         ).values_list('schedule_id', flat=True)
+
+        if not show_all and fecha == fecha_hoy:
+            limite = (datetime.combine(fecha_hoy, hora_ahora) + timedelta(minutes=15)).time()
+            schedules = schedules.filter(start_time__gt=limite)
 
         data = []
         for schedule in schedules:
             s = BaseScheduleSerializer(schedule).data
-            s['occupied'] = schedule.id in reserved
+            s['occupied'] = schedule.id in reservados
+            if fecha == fecha_hoy:
+                s['passed'] = schedule.end_time <= hora_ahora
+            else:
+                s['passed'] = fecha < fecha_hoy
             data.append(s)
 
         return Response({'schedules': data}, status=status.HTTP_200_OK)
@@ -170,19 +340,90 @@ def list_schedules(request, court_id):
         status=status.HTTP_200_OK
     )
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_schedule(request, schedule_id):
+    """Elimina un bloque horario específico si no tiene reservas a futuro."""
+    try:
+        schedule = BaseSchedule.objects.get(id=schedule_id)
+    except BaseSchedule.DoesNotExist:
+        return Response({'message': 'Horario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if schedule.court.facility.admin.id != request.user.id:
+        return Response({'message': 'No tenés permiso'}, status=status.HTTP_403_FORBIDDEN)
+
+    fecha_hoy = timezone.localtime().date()
+    tiene_reservas = Reservation.objects.filter(
+        schedule=schedule,
+        date__gte=fecha_hoy,
+        status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+    ).exists()
+
+    if tiene_reservas:
+        return Response(
+            {'message': 'No se puede eliminar el horario porque cuenta con reservas vigentes.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    schedule.delete()
+    return Response({'message': 'Horario eliminado correctamente'}, status=status.HTTP_204_NO_CONTENT)
+
 # ─────────────────────────────────────────────
 #  RESERVAS
 # ─────────────────────────────────────────────
 
+def actualizar_reservas_completadas(reservations_qs):
+    """Marca como completed las reservas cuya hora final ya pasó."""
+    ahora = timezone.localtime()
+    fecha_hoy = ahora.date()
+    hora_ahora = ahora.time()
+
+    for reserva in reservations_qs.filter(status=Reservation.STATUS_CONFIRMED):
+        fin = reserva.schedule.end_time
+        if reserva.date < fecha_hoy or (reserva.date == fecha_hoy and fin <= hora_ahora):
+            reserva.status = Reservation.STATUS_COMPLETED
+            reserva.save()
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_reservation(request):
-    """El jugador solicita una reserva."""
-    serializer = ReservationSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(player=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    facility_id = request.data.get('facility_id')
+    date = request.data.get('date')
+    start_time = request.data.get('start_time')
+
+    try:
+        facility = Facility.objects.get(id=facility_id)
+    except Facility.DoesNotExist:
+        return Response({'message': 'Complejo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    courts = Court.objects.filter(facility=facility, available=True)
+
+    for court in courts:
+        try:
+            schedule = BaseSchedule.objects.get(court=court, start_time=start_time)
+        except BaseSchedule.DoesNotExist:
+            continue
+        already_reserved = Reservation.objects.filter(
+            schedule=schedule,
+            date=date,
+            status__in=[Reservation.STATUS_PENDING, Reservation.STATUS_CONFIRMED]
+        ).exists()
+
+        if not already_reserved:
+            reservation = Reservation.objects.create(
+                schedule=schedule,
+                player=request.user,
+                date=date,
+                status=Reservation.STATUS_PENDING
+            )
+            serializer = ReservationSerializer(reservation)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(
+        {'message': 'No hay canchas disponibles para ese horario'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 @api_view(['GET'])
@@ -191,6 +432,7 @@ def my_reservations(request):
     """El jugador ve su historial de reservas."""
     reservations = Reservation.objects.filter(player=request.user).order_by('-date')
     serializer = ReservationSerializer(reservations, many=True)
+    actualizar_reservas_completadas(reservations)
     return Response({'reservations': serializer.data}, status=status.HTTP_200_OK)
 
 
@@ -210,6 +452,7 @@ def facility_reservations(request, facility_id):
         schedule__court__facility=facility
     ).order_by('-date')
 
+    actualizar_reservas_completadas(reservations)
     serializer = ReservationSerializer(reservations, many=True)
     return Response({'reservations': serializer.data}, status=status.HTTP_200_OK)
 
@@ -252,9 +495,9 @@ def create_review(request):
         # Recalcular el promedio del complejo
         facility = review.reservation.schedule.court.facility
         reviews = Review.objects.filter(
-            review__schedule__court__facility=facility
+            reservation__schedule__court__facility=facility
         )
-        total = review.count()
+        total = reviews.count()
         avg = sum(r.rating for r in reviews) / total
 
         facility.avg_rating = round(avg, 1)

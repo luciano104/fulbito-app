@@ -5,6 +5,7 @@ class AuthUser {
   final int id;
   final String name;
   final String lastname;
+  final String phone;
   final String email;
   final String role;
   final int? facilityId; // solo lo tiene el dueño, null si es jugador
@@ -13,6 +14,7 @@ class AuthUser {
     required this.id,
     required this.name,
     required this.lastname,
+    required this.phone,
     required this.email,
     required this.role,
     this.facilityId,
@@ -23,6 +25,7 @@ class AuthUser {
         name: json['name'],
         lastname: json['lastname'],
         email: json['email'],
+        phone: json['phone'],
         role: json['role'],
         facilityId: json['facility_id'], // Django lo agrega si es owner
       );

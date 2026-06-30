@@ -33,14 +33,18 @@ class _ReservationScreenState extends State<ReservationScreen> {
     super.initState();
     Future.microtask(() async {
       final canchasProv = context.read<CanchasProvider>();
-     
       await canchasProv.cargarDetallesDelComplejo(widget.token, widget.facilityId);
-      
+
       if (canchasProv.canchasDelComplejo.isNotEmpty) {
-        setState(() {
-          _selectedCourtId = canchasProv.canchasDelComplejo.first['id'].toString();
-        });
-        _consultarHorariosBackend();
+        final primerCourtId = canchasProv.canchasDelComplejo.first['id'].toString();
+        
+        // ← guardamos el ID para que _consultarHorariosBackend lo use
+        setState(() => _selectedCourtId = primerCourtId);
+        
+        final fechaStr = _formatearFecha(_selectedDate);
+        context.read<ReservasProvider>().cargarHorariosDeCancha(
+          widget.token, primerCourtId, fechaStr,
+        );
       }
     });
   }
@@ -67,23 +71,34 @@ class _ReservationScreenState extends State<ReservationScreen> {
   }
 
   Future<void> _confirmarReservaReal() async {
-    if (_selectedScheduleId == null) return;
-    
+    if (_selectedTimeLabel == null) return;
+
     final reservasProv = context.read<ReservasProvider>();
     final fechaStr = _formatearFecha(_selectedDate);
 
-    final exito = await reservasProv.solicitarReserva(widget.token, _selectedScheduleId!, fechaStr);
+    final exito = await reservasProv.solicitarReserva(
+      widget.token,
+      widget.facilityId,
+      _selectedTimeLabel!,
+      fechaStr,
+    );
 
     if (!mounted) return;
 
     if (exito) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Reserva registrada para las $_selectedTimeLabel hs!'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text('¡Reserva registrada para las $_selectedTimeLabel hs!'),
+          backgroundColor: Colors.green,
+        ),
       );
-      Navigator.pop(context); 
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hubo un problema al procesar la reserva.'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('No hay canchas disponibles para ese horario.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -165,6 +180,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
       },
     );
   }
+  String superficie(surface){
+    switch (surface){
+      case 'grass': return 'Pasto Natural';
+      case 'turf': return 'Pasto Sintético';
+      case 'cement': return 'Cemento';
+      case 'dirt': return 'Tierra';
+      default: return '';
+      
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +231,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           items: canchasProvider.canchasDelComplejo.map((cancha) {
                             return DropdownMenuItem<String>(
                               value: cancha['id'].toString(),
-                              child: Text(cancha['name'] ?? 'Cancha sin nombre'),
+                              child: Text('${cancha['team_size']} (${superficie(cancha['surface'])}). Precio: \$${cancha['price']}'),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -322,7 +347,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ),
                             onPressed: _selectedScheduleId == null ? null : _confirmarReservaReal,
                             child: Text(
-                              _selectedScheduleId == null ? 'Seleccioná un horario' : 'RESERVAR $_selectedTimeLabel專HS',
+                              _selectedScheduleId == null ? 'Seleccioná un horario' : 'RESERVAR $_selectedTimeLabel HS',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),

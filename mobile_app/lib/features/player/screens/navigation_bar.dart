@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/auth/screens/profile_screen.dart';
 import 'booking_screen.dart';
 import 'home_screen.dart';
 import 'canchas_map_screen.dart';
@@ -19,10 +20,8 @@ class _JugadorHomeScreenState extends State<JugadorHomeScreen> {
     const InicioTab(),
     const BookingsScreen(),
     const CanchasMapScreen(),
+    const ProfileScreen(),
     
-    const Center(
-      child: Text('Cerca / Mapa\n(Próximamente)', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
-    ),
   ];
 
  

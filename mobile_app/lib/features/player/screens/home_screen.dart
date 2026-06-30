@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/features/auth/screens/profile_screen.dart';
 import 'package:provider/provider.dart'; 
 import './../providers/canchas_provider.dart'; 
 import 'reservation_screen.dart'; 
@@ -60,6 +61,7 @@ class _InicioTabState extends State<InicioTab> {
   @override
   Widget build(BuildContext context) {
     final canchasProvider = Provider.of<CanchasProvider>(context);
+    final user = context.watch<AuthProvider>().user;
 
     return SafeArea(
       child: Padding(
@@ -74,11 +76,11 @@ class _InicioTabState extends State<InicioTab> {
                   iconSize: 32,
                   icon: const Icon(Icons.person, color: Colors.green),
                   tooltip: 'Perfil',
-                  onPressed: () => print('Clic en Perfil'),
+                  onPressed: () => Navigator.push(context,MaterialPageRoute(builder: (_) => const ProfileScreen()),)
                 ),
-                const Text(
-                  'Hola Jugador',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
+                Text(
+                  'Hola ${user?.name ?? 'Jugador'}',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
                 const SizedBox(width: 48), 
               ],

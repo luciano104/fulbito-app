@@ -100,35 +100,20 @@ class Court(models.Model):
 # ─────────────────────────────────────────────
 
 class BaseSchedule(models.Model):
-
-    DAY_CHOICES = [
-        ('monday', 'Lunes'),
-        ('tuesday', 'Martes'),
-        ('wednesday', 'Miércoles'),
-        ('thursday', 'Jueves'),
-        ('friday', 'Viernes'),
-        ('saturday', 'Sábado'),
-        ('sunday', 'Domingo'),
-    ]
-
     court = models.ForeignKey(
         Court,
         on_delete=models.CASCADE,
         related_name='schedules'
     )
-
-    weekday = models.CharField(max_length=10, choices=DAY_CHOICES)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
     class Meta:
         db_table = 'base_schedules'
-        # Un mismo horario no puede estar duplicado para la misma cancha
-        unique_together = ('court', 'weekday', 'start_time')
+        unique_together = ('court', 'start_time')
 
     def __str__(self):
-        return f'{self.court} - {self.weekday} {self.start_time}'
-
+        return f'{self.court} - {self.start_time} a {self.end_time}'
 
 # ─────────────────────────────────────────────
 #  RESERVA
