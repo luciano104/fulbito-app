@@ -34,4 +34,8 @@ urlpatterns = [
     # Favoritos
     path('facilities/<int:facility_id>/favorite/', views.toggle_favorite),
     path('favorites/', views.my_favorites),
+
+    #Mercado Pago
+    path('payments/create-preference/', views.create_mp_preference),
+    path('payments/webhook/', views.payment_webhook),
 ]

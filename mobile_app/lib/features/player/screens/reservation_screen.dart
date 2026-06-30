@@ -5,7 +5,7 @@ import '../providers/reservas_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ReservationScreen extends StatefulWidget {
-  final String token; 
+  final String token;
   final String facilityId;
   final String facilityName;
   final String facilityImage;
@@ -37,10 +37,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
 
       if (canchasProv.canchasDelComplejo.isNotEmpty) {
         final primerCourtId = canchasProv.canchasDelComplejo.first['id'].toString();
-        
-        // ← guardamos el ID para que _consultarHorariosBackend lo use
         setState(() => _selectedCourtId = primerCourtId);
-        
+
         final fechaStr = _formatearFecha(_selectedDate);
         context.read<ReservasProvider>().cargarHorariosDeCancha(
           widget.token, primerCourtId, fechaStr,
@@ -56,7 +54,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
   void _consultarHorariosBackend() {
     if (_selectedCourtId != null) {
       final fechaStr = _formatearFecha(_selectedDate);
-     
       context.read<ReservasProvider>().cargarHorariosDeCancha(widget.token, _selectedCourtId!, fechaStr);
     }
   }
@@ -70,16 +67,25 @@ class _ReservationScreenState extends State<ReservationScreen> {
     return dias[weekday - 1];
   }
 
+  String _superficie(String? surface) {
+    switch (surface) {
+      case 'grass': return 'Pasto Natural';
+      case 'turf': return 'Pasto Sintético';
+      case 'concrete': return 'Cemento';
+      case 'dirt': return 'Tierra';
+      default: return surface ?? '';
+    }
+  }
+
   Future<void> _confirmarReservaReal() async {
-    if (_selectedTimeLabel == null) return;
+    if (_selectedScheduleId == null) return;
 
     final reservasProv = context.read<ReservasProvider>();
     final fechaStr = _formatearFecha(_selectedDate);
 
     final exito = await reservasProv.solicitarReserva(
       widget.token,
-      widget.facilityId,
-      _selectedTimeLabel!,
+      _selectedScheduleId!,
       fechaStr,
     );
 
@@ -96,16 +102,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No hay canchas disponibles para ese horario.'),
+          content: Text('Ese horario ya no está disponible.'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
-  
+
   Future<void> _procesarPagoMercadoPago() async {
     if (_selectedScheduleId == null) return;
-    
+
     final reservasProv = context.read<ReservasProvider>();
     final fechaStr = _formatearFecha(_selectedDate);
 
@@ -116,9 +122,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
     );
 
     final urlPago = await reservasProv.crearPreferenciaPago(
-      widget.token, 
-      _selectedScheduleId!, 
-      fechaStr
+      widget.token,
+      _selectedScheduleId!,
+      fechaStr,
     );
 
     if (!mounted) return;
@@ -127,13 +133,20 @@ class _ReservationScreenState extends State<ReservationScreen> {
     if (urlPago != null) {
       final uri = Uri.parse(urlPago);
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Reserva PAGADA y confirmada con éxito!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Completá el pago en Mercado Pago. Te avisaremos cuando se confirme.'),
+            backgroundColor: Colors.blueAccent,
+          ),
         );
-        Navigator.pop(context); 
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir Mercado Pago.'), backgroundColor: Colors.red),
+        );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -153,15 +166,16 @@ class _ReservationScreenState extends State<ReservationScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('¿Cómo querés pagar?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const Text('¿Cómo querés pagar?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 20),
               ListTile(
                 leading: const Icon(Icons.storefront, color: Colors.green),
                 title: const Text('Pagar en el complejo', style: TextStyle(color: Colors.white)),
                 subtitle: const Text('Abonás el total cuando vas a jugar', style: TextStyle(color: Colors.white54)),
                 onTap: () {
-                  Navigator.pop(context); 
-                  _confirmarReservaReal(); 
+                  Navigator.pop(context);
+                  _confirmarReservaReal();
                 },
               ),
               const Divider(color: Colors.white24),
@@ -170,8 +184,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                 title: const Text('Pagar con Mercado Pago', style: TextStyle(color: Colors.white)),
                 subtitle: const Text('Asegurá tu turno ahora mismo', style: TextStyle(color: Colors.white54)),
                 onTap: () {
-                  Navigator.pop(context); 
-                  _procesarPagoMercadoPago(); 
+                  Navigator.pop(context);
+                  _procesarPagoMercadoPago();
                 },
               ),
             ],
@@ -179,16 +193,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
         );
       },
     );
-  }
-  String superficie(surface){
-    switch (surface){
-      case 'grass': return 'Pasto Natural';
-      case 'turf': return 'Pasto Sintético';
-      case 'cement': return 'Cemento';
-      case 'dirt': return 'Tierra';
-      default: return '';
-      
-    }
   }
 
   @override
@@ -220,7 +224,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Seleccioná la cancha:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text('Seleccioná la cancha:',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           value: _selectedCourtId,
@@ -231,7 +236,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           items: canchasProvider.canchasDelComplejo.map((cancha) {
                             return DropdownMenuItem<String>(
                               value: cancha['id'].toString(),
-                              child: Text('${cancha['team_size']} (${superficie(cancha['surface'])}). Precio: \$${cancha['price']}'),
+                              child: Text(
+                                '${cancha['team_size']} · ${_superficie(cancha['surface'])} · \$${cancha['price']}',
+                              ),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -244,7 +251,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
-                        const Text('¿Qué día querés jugar?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text('¿Qué día querés jugar?',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         SizedBox(
                           height: 80,
@@ -275,9 +283,14 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(_getDiaSemana(date.weekday), style: TextStyle(color: isSelected ? Colors.white : Colors.grey)),
+                                      Text(_getDiaSemana(date.weekday),
+                                          style: TextStyle(color: isSelected ? Colors.white : Colors.grey)),
                                       const SizedBox(height: 4),
-                                      Text('${date.day}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : Colors.white70)),
+                                      Text('${date.day}',
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: isSelected ? Colors.white : Colors.white70)),
                                     ],
                                   ),
                                 ),
@@ -345,9 +358,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               disabledBackgroundColor: Colors.grey[800],
                             ),
-                            onPressed: _selectedScheduleId == null ? null : _confirmarReservaReal,
+                            onPressed: _selectedScheduleId == null ? null : _mostrarOpcionesDePago,
                             child: Text(
-                              _selectedScheduleId == null ? 'Seleccioná un horario' : 'RESERVAR $_selectedTimeLabel HS',
+                              _selectedScheduleId == null
+                                  ? 'Seleccioná un horario'
+                                  : 'RESERVAR $_selectedTimeLabel HS',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),
