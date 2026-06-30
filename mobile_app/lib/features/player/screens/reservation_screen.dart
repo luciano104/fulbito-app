@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/canchas_provider.dart';
 import '../providers/reservas_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReservationScreen extends StatefulWidget {
   final String token; 
@@ -100,6 +101,84 @@ class _ReservationScreenState extends State<ReservationScreen> {
         ),
       );
     }
+  }
+  
+  Future<void> _procesarPagoMercadoPago() async {
+    if (_selectedScheduleId == null) return;
+    
+    final reservasProv = context.read<ReservasProvider>();
+    final fechaStr = _formatearFecha(_selectedDate);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
+    );
+
+    final urlPago = await reservasProv.crearPreferenciaPago(
+      widget.token, 
+      _selectedScheduleId!, 
+      fechaStr
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    if (urlPago != null) {
+      final uri = Uri.parse(urlPago);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('¡Reserva PAGADA y confirmada con éxito!'), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context); 
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al conectar con Mercado Pago.'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _mostrarOpcionesDePago() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('¿Cómo querés pagar?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.storefront, color: Colors.green),
+                title: const Text('Pagar en el complejo', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Abonás el total cuando vas a jugar', style: TextStyle(color: Colors.white54)),
+                onTap: () {
+                  Navigator.pop(context); 
+                  _confirmarReservaReal(); 
+                },
+              ),
+              const Divider(color: Colors.white24),
+              ListTile(
+                leading: const Icon(Icons.phone_android, color: Colors.blueAccent),
+                title: const Text('Pagar con Mercado Pago', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Asegurá tu turno ahora mismo', style: TextStyle(color: Colors.white54)),
+                onTap: () {
+                  Navigator.pop(context); 
+                  _procesarPagoMercadoPago(); 
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
   String superficie(surface){
     switch (surface){

@@ -103,4 +103,32 @@ class ReservasProvider extends ChangeNotifier {
       return false;
     }
   }
+  Future<String?> crearPreferenciaPago(String token, String scheduleId, String fechaFormateada) async {
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/reservations/create_payment/'); 
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token, 
+        },
+        body: jsonEncode({
+          'schedule': scheduleId,
+          'date': fechaFormateada,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data['init_point']; 
+      } else {
+        print('Error del backend al crear pago: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error de red en Mercado Pago: $e');
+      return null;
+    }
+  }
 }
